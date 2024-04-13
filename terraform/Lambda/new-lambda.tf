@@ -31,7 +31,7 @@ resource "aws_iam_role" "new-lambda-role" {
 resource "aws_lambda_function" "new-lambda" {
   function_name = var.lambda_func_name
   filename      = "handler.zip"
-  # runtime       = "python3.10"
+  runtime       = "python3.10"
   handler       = "handler.lambda_handler"
-  role          = aws_iam_role.new-lambda-role.arn
+  # role          = aws_iam_role.new-lambda-role.arn
 }
