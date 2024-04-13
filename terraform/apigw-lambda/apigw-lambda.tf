@@ -23,7 +23,7 @@ resource "aws_apigatewayv2_api" "apigw-http-api" {
             "title": "apigw-http-api-openapi-spec",
             "version": "1.0"
         },
-        "path": {
+        "paths": {
             "/time": {
                 "get": {
                     "description": "Returns time in format dd-mon-yyyy hh24:mi:ss"
