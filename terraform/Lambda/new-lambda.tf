@@ -33,5 +33,5 @@ resource "aws_lambda_function" "new-lambda" {
   filename      = "handler.zip"
   runtime       = "python3.10"
   handler       = "handler.lambda_handler"
-  # role          = aws_iam_role.new-lambda-role.arn
+  role          = aws_iam_role.new-lambda-role.arn
 }
