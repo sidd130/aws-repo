@@ -3,11 +3,14 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~>4.16"
-      region  = "ap-south-1"
     }
   }
 
   required_version = ">=1.2.0"
+}
+
+provider "aws" {
+  region = var.region
 }
 
 resource "aws_iam_role" "new-lambda-role" {
