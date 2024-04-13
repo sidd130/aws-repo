@@ -58,3 +58,8 @@ resource "aws_apigatewayv2_route" "apigw-route" {
   route_key = "GET /time"
   target = "integrations/${aws_apigatewayv2_integration.apigw-integration.id}"
 }
+
+resource "aws_apigatewayv2_stage" "apigw-stage" {
+  api_id = aws_apigatewayv2_api.apigw-http-api.id
+  name = "apigw-stage"
+}
