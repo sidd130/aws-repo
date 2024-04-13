@@ -43,22 +43,6 @@ resource "aws_lambda_function" "lambda-time" {
 resource "aws_apigatewayv2_api" "apigw-http-api" {
   name = "apigw-http-api"
   protocol_type = "HTTP"
-  body = jsonencode(
-    {
-        "openapi": "3.0.1",
-        "info": {
-            "title": "apigw-http-api-openapi-spec",
-            "version": "1.0"
-        },
-        "paths": {
-            "/time": {
-                "get": {
-                    "description": "Returns time in format dd-mon-yyyy hh24:mi:ss"
-                }
-            }
-        }
-    }
-  )
 }
 
 resource "aws_apigatewayv2_integration" "apigw-integration" {
