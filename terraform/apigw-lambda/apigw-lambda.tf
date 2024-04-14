@@ -132,3 +132,8 @@ resource "aws_apigatewayv2_route" "apigw-route" {
   route_key = "GET /time"
   target = "integrations/${aws_apigatewayv2_integration.apigw-integration.id}"
 }
+
+output "apigw-invoke-url" {
+  value = aws_apigatewayv2_stage.apigw-stage.invoke_url
+  description = "Invocation URL of the newly created API Gateway stage"
+}
