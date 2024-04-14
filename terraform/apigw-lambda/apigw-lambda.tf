@@ -68,7 +68,7 @@ data "aws_iam_policy_document" "lambda-logging-policy-document" {
 
 resource "aws_iam_policy" "lambda-enable-logging-policy" {
   name = "lambda-enable-logging-policy"
-  policy = data.aws_iam_policy_document.lambda-logging-policy-document
+  policy = data.aws_iam_policy_document.lambda-logging-policy-document.json
 }
 
 # Attaching policy to exec role
