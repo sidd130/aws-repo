@@ -98,6 +98,10 @@ resource "aws_apigatewayv2_stage" "apigw-stage" {
     destination_arn = aws_cloudwatch_log_group.apigw-log-group.arn
     format = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId $context.extendedRequestId"
   }
+  route_settings {
+    route_key = "GET /time"
+    logging_level = "INFO"
+  }
 }
 
 # Resource definition for API Gateway Integration
