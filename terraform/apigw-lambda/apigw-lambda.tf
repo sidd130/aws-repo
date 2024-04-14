@@ -33,6 +33,12 @@ resource "aws_iam_role" "lambda-time-exec-role" {
   EOF
 }
 
+# Resource definition for Cloudwatch Log Group
+resource "aws_cloudwatch_log_group" "lambda-log-group" {
+  name = "/aws/lambda/${aws_lambda_function.lambda-time.function_name}"
+  retention_in_days = 14
+}
+
 # Resource definition for Lambda function
 resource "aws_lambda_function" "lambda-time" {
   function_name = "lambda-time"
@@ -44,14 +50,9 @@ resource "aws_lambda_function" "lambda-time" {
     log_format = "Text"
     log_group = aws_cloudwatch_log_group.lambda-log-group.id
   }
-  depends_on = [ aws_cloudwatch_log_group.lambda-log-group ]
 }
 
-# Resource definition for Cloudwatch Log Group
-resource "aws_cloudwatch_log_group" "lambda-log-group" {
-  name = "/aws/lambda/${aws_lambda_function.lambda-time.function_name}"
-  retention_in_days = 14
-}
+
 
 data "aws_iam_policy_document" "lambda-logging-policy-document" {
   statement {
