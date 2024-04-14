@@ -33,9 +33,15 @@ resource "aws_iam_role" "lambda-time-exec-role" {
   EOF
 }
 
-# Resource definition for Cloudwatch Log Group
+# Resource definition for Cloudwatch Log Group for Lambda
 resource "aws_cloudwatch_log_group" "lambda-log-group" {
   name = "/aws/lambda/${aws_lambda_function.lambda-time.function_name}"
+  retention_in_days = 14
+}
+
+# Resource definition for Cloudwatch Log Group for API Gateway
+resource "aws_cloudwatch_log_group" "apigw-log-group" {
+  name = "/aws/apigw/${aws_apigatewayv2_api.apigw-http-api}"
   retention_in_days = 14
 }
 
@@ -88,6 +94,10 @@ resource "aws_apigatewayv2_stage" "apigw-stage" {
   api_id = aws_apigatewayv2_api.apigw-http-api.id
   name = "apigw-stage"
   auto_deploy = "true"
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.apigw-log-group.arn
+    format = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId $context.extendedRequestId"
+  }
 }
 
 # Resource definition for API Gateway Integration
