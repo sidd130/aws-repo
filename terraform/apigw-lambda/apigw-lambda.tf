@@ -111,3 +111,14 @@ resource "aws_apigatewayv2_stage" "apigw-stage" {
   api_id = aws_apigatewayv2_api.apigw-http-api.id
   name = "apigw-stage"
 }
+
+# Resource definition for API Gateway Deployment
+resource "aws_apigatewayv2_deployment" "apigw-deployment" {
+  api_id = aws_apigatewayv2_api.apigw-http-api.id
+  triggers = {
+    redeployment = sha1(join(",", tolist([
+      jsonencode(aws_apigatewayv2_integration.apigw-integration),
+      jsonencode(aws_apigatewayv2_route.apigw-route)
+    ])))
+  }
+}
