@@ -61,7 +61,7 @@ data "aws_iam_policy_document" "lambda-logging-policy-document" {
     ]
     effect = "Allow"
     resources = [
-      aws_cloudwatch_log_group.lambda-log-group.arn
+      "${aws_cloudwatch_log_group.lambda-log-group.arn}:*"
     ]
   }
 }
