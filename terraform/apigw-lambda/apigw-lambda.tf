@@ -44,7 +44,7 @@ resource "aws_lambda_function" "lambda-time" {
     log_format = "Text"
     log_group = aws_cloudwatch_log_group.lambda-log-group.id
   }
-  depends_on = [ aws_cloudwatch_log_group.lambda-log-group, ]
+  depends_on = [ aws_cloudwatch_log_group.lambda-log-group ]
 }
 
 # Resource definition for Cloudwatch Log Group
