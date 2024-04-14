@@ -121,4 +121,7 @@ resource "aws_apigatewayv2_deployment" "apigw-deployment" {
       jsonencode(aws_apigatewayv2_route.apigw-route)
     ])))
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
