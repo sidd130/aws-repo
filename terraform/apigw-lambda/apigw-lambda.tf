@@ -110,6 +110,7 @@ resource "aws_apigatewayv2_route" "apigw-route" {
 resource "aws_apigatewayv2_stage" "apigw-stage" {
   api_id = aws_apigatewayv2_api.apigw-http-api.id
   name = "apigw-stage"
+  auto_deploy = "true"
 }
 
 # Resource definition for API Gateway Deployment
