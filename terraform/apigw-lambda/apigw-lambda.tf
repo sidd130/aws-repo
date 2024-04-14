@@ -51,6 +51,7 @@ resource "aws_apigatewayv2_integration" "apigw-integration" {
   integration_method = "POST"
   connection_type = "INTERNET"
   integration_uri = aws_lambda_function.lambda-time.invoke_arn
+  payload_format_version = 2.0
 }
 
 resource "aws_apigatewayv2_route" "apigw-route" {
