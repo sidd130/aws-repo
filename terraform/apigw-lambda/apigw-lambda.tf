@@ -83,12 +83,19 @@ resource "aws_apigatewayv2_api" "apigw-http-api" {
   protocol_type = "HTTP"
 }
 
+# Resource definition for API Gateway Stage
+resource "aws_apigatewayv2_stage" "apigw-stage" {
+  api_id = aws_apigatewayv2_api.apigw-http-api.id
+  name = "apigw-stage"
+  auto_deploy = "true"
+}
+
 # Resource definition for API Gateway Integration
 resource "aws_apigatewayv2_integration" "apigw-integration" {
   api_id = aws_apigatewayv2_api.apigw-http-api.id
   integration_type = "AWS_PROXY"
   integration_method = "POST"
-  connection_type = "INTERNET"
+  # connection_type = "INTERNET"
   integration_uri = aws_lambda_function.lambda-time.invoke_arn
   payload_format_version = "2.0"
   request_parameters = {
@@ -125,11 +132,3 @@ resource "aws_apigatewayv2_route" "apigw-route" {
   route_key = "GET /time"
   target = "integrations/${aws_apigatewayv2_integration.apigw-integration.id}"
 }
-
-# Resource definition for API Gateway Stage
-resource "aws_apigatewayv2_stage" "apigw-stage" {
-  api_id = aws_apigatewayv2_api.apigw-http-api.id
-  name = "apigw-stage"
-  auto_deploy = "true"
-}
-
