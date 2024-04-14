@@ -102,6 +102,7 @@ resource "aws_apigatewayv2_stage" "apigw-stage" {
     route_key = "GET /time"
     logging_level = "INFO"
   }
+  depends_on = [ aws_apigatewayv2_route.apigw-route ]
 }
 
 # Resource definition for API Gateway Integration
