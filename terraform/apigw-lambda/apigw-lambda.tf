@@ -93,9 +93,7 @@ resource "aws_apigatewayv2_integration" "apigw-integration" {
   payload_format_version = "2.0"
   response_parameters {
     status_code = 200
-    mappings = {
-      "append:header.Content-Type" = "application/json"
-    }
+    mappings = {}
   }
 }
 
