@@ -91,6 +91,12 @@ resource "aws_apigatewayv2_integration" "apigw-integration" {
   connection_type = "INTERNET"
   integration_uri = aws_lambda_function.lambda-time.invoke_arn
   payload_format_version = "2.0"
+  request_parameters = {
+    status_code = 200
+    mappings = {
+      "append:header.Content-Type": "application/json"
+    }
+  }
   response_parameters {
     status_code = 200
     mappings = {
