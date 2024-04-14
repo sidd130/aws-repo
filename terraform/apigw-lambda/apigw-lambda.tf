@@ -41,7 +41,7 @@ resource "aws_cloudwatch_log_group" "lambda-log-group" {
 
 # Resource definition for Cloudwatch Log Group for API Gateway
 resource "aws_cloudwatch_log_group" "apigw-log-group" {
-  name = "/aws/apigw/${aws_apigatewayv2_api.apigw-http-api}"
+  name = "/aws/apigw/${aws_apigatewayv2_api.apigw-http-api.id}"
   retention_in_days = 14
 }
 
