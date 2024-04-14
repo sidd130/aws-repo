@@ -101,7 +101,6 @@ resource "aws_apigatewayv2_stage" "apigw-stage" {
   route_settings {
     route_key = "GET /time"
     logging_level = "INFO"
-    throttling_rate_limit = 100
   }
 }
 
