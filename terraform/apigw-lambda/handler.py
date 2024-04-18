@@ -7,4 +7,12 @@ def lambda_handler(event, context):
     print(event)
     print(context)
     print(resp)
-    return json.dumps(resp)
+    final_response = {
+        "isBase64Encoded": False,
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": resp
+    }
+    return json.dumps(final_response)
