@@ -112,9 +112,9 @@ resource "aws_apigatewayv2_integration" "apigw-integration" {
   integration_method = "POST"
   # connection_type = "INTERNET"
   integration_uri        = aws_lambda_function.lambda-time.invoke_arn
-  payload_format_version = "2.0"
+  payload_format_version = "1.0"
   request_parameters = {
-    "append:$header.Content-Type" : "application/json"
+    "append:header.Content-Type" : "application/json"
   }
   response_parameters {
     status_code = 200
