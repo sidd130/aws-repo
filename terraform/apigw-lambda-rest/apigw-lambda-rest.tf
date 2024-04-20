@@ -109,6 +109,7 @@ resource "aws_api_gateway_integration" "apigw-integration" {
 
 resource "aws_api_gateway_deployment" "apigw-deploy" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  depends_on = [ aws_api_gateway_rest_api.apigw-lambda-rest-api, aws_api_gateway_method.get-method]
 }
 
 resource "aws_api_gateway_stage" "apigw-stage" {
