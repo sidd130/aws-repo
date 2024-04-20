@@ -32,25 +32,25 @@ resource "aws_iam_role" "lambda-time-exec-role" {
   EOF
 }
 
-resource "aws_iam_role" "apigw-logging" {
-  name = "api_gateway_cloudwatch_global"
+# resource "aws_iam_role" "apigw-logging" {
+#   name = "api_gateway_cloudwatch_global"
 
-  assume_role_policy = <<EOF
-  {
-  "Version": "2012-10-17",
-  "Statement": [
-      {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-          "Service": "apigateway.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-      }
-  ]
-  }
-  EOF
-}
+#   assume_role_policy = <<EOF
+#   {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#       {
+#       "Sid": "",
+#       "Effect": "Allow",
+#       "Principal": {
+#           "Service": "apigateway.amazonaws.com"
+#       },
+#       "Action": "sts:AssumeRole"
+#       }
+#   ]
+#   }
+#   EOF
+# }
 
 resource "aws_cloudwatch_log_group" "lambda-log-group" {
   name              = "/aws/lambda/${aws_lambda_function.lambda-time.function_name}"
@@ -97,9 +97,9 @@ resource "aws_cloudwatch_log_group" "apigw-log-group" {
   retention_in_days = 14
 }
 
-resource "aws_api_gateway_account" "apigw-account" {
-  cloudwatch_role_arn = aws_iam_role.apigw-logging.arn
-}
+# resource "aws_api_gateway_account" "apigw-account" {
+#   cloudwatch_role_arn = aws_iam_role.apigw-logging.arn
+# }
 
 resource "aws_api_gateway_rest_api" "apigw-lambda-rest-api" {
   name = "apigw-lambda-rest"
@@ -140,10 +140,10 @@ resource "aws_api_gateway_stage" "apigw-stage" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   stage_name = "apigw-stage"
   deployment_id = aws_api_gateway_deployment.apigw-deploy.id
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.apigw-log-group.arn
-    format          = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId $context.extendedRequestId"
-  }
+  # access_log_settings {
+  #   destination_arn = aws_cloudwatch_log_group.apigw-log-group.arn
+  #   format          = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId $context.extendedRequestId"
+  # }
 }
 
 output "apigw-invoke-url" {
