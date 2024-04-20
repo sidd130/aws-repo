@@ -32,6 +32,26 @@ resource "aws_iam_role" "lambda-time-exec-role" {
   EOF
 }
 
+resource "aws_iam_role" "apigw-logging" {
+  name = "api_gateway_cloudwatch_global"
+
+  assume_role_policy = <<EOF
+  {
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+          "Service": "apigateway.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+      }
+  ]
+  }
+  EOF
+}
+
 resource "aws_cloudwatch_log_group" "lambda-log-group" {
   name              = "/aws/lambda/${aws_lambda_function.lambda-time.function_name}"
   retention_in_days = 14
@@ -75,6 +95,10 @@ resource "aws_iam_role_policy_attachment" "lambda-enable-logging-role-policy-att
 resource "aws_cloudwatch_log_group" "apigw-log-group" {
   name              = "/aws/apigw/${aws_api_gateway_rest_api.apigw-lambda-rest-api.id}"
   retention_in_days = 14
+}
+
+resource "aws_api_gateway_account" "apigw-account" {
+  cloudwatch_role_arn = aws_iam_role.apigw-logging.arn
 }
 
 resource "aws_api_gateway_rest_api" "apigw-lambda-rest-api" {
