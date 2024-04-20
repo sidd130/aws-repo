@@ -110,8 +110,8 @@ resource "aws_api_gateway_rest_api" "apigw-lambda-rest-api" {
 
 resource "aws_api_gateway_resource" "apigw-lambda-rest-resource" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-  parent_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.root_resource_id
   path_part = "time"
+  parent_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.root_resource_id
 }
 
 resource "aws_api_gateway_method" "get-method" {
@@ -119,6 +119,13 @@ resource "aws_api_gateway_method" "get-method" {
   resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
   http_method = "GET"
   authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "apigw-method-response" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method = aws_api_gateway_method.get-method.http_method
+  status_code = "200"
 }
 
 resource "aws_api_gateway_integration" "apigw-integration" {
