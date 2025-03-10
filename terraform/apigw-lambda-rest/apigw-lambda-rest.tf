@@ -101,6 +101,7 @@ provider "aws" {
 #   cloudwatch_role_arn = aws_iam_role.apigw-logging.arn
 # }
 
+# REST API
 resource "aws_api_gateway_rest_api" "apigw-lambda-rest-api" {
   name = "apigw-lambda-rest"
   endpoint_configuration {
@@ -108,12 +109,14 @@ resource "aws_api_gateway_rest_api" "apigw-lambda-rest-api" {
   }
 }
 
+# REST API Resource
 resource "aws_api_gateway_resource" "apigw-lambda-rest-resource" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   path_part   = "time"
   parent_id   = aws_api_gateway_rest_api.apigw-lambda-rest-api.root_resource_id
 }
 
+# POST Method
 resource "aws_api_gateway_method" "post-method" {
   rest_api_id   = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   resource_id   = aws_api_gateway_resource.apigw-lambda-rest-resource.id
@@ -121,6 +124,7 @@ resource "aws_api_gateway_method" "post-method" {
   authorization = "NONE"
 }
 
+# POST Integration
 resource "aws_api_gateway_integration" "apigw-integration" {
   rest_api_id             = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   resource_id             = aws_api_gateway_resource.apigw-lambda-rest-resource.id
@@ -130,6 +134,7 @@ resource "aws_api_gateway_integration" "apigw-integration" {
   # uri                     = aws_lambda_function.lambda-time.invoke_arn
 }
 
+# POST Method Response
 resource "aws_api_gateway_method_response" "apigw-method-response" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
@@ -137,6 +142,7 @@ resource "aws_api_gateway_method_response" "apigw-method-response" {
   status_code = "200"
 }
 
+# POST Integration Response
 resource "aws_api_gateway_integration_response" "apigw-integration-response" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
@@ -146,6 +152,50 @@ resource "aws_api_gateway_integration_response" "apigw-integration-response" {
   depends_on = [ 
     aws_api_gateway_method.post-method,
     aws_api_gateway_integration.apigw-integration
+   ]
+}
+
+# OPTIONS Method
+resource "aws_api_gateway_method" "options-method" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method = "OPTIONS"
+  authorization = "NONE"
+}
+
+# OPTIONS Integration
+resource "aws_api_gateway_integration" "options-integration" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method = aws_api_gateway_method.options-method.http_method
+  integration_http_method = "OPTIONS"
+  type = "MOCK"
+}
+
+# OPTIONS Method Response
+resource "aws_api_gateway_method_response" "options-method-response" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method = aws_api_gateway_method.options-method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+# OPTIONS Integration Response
+resource "aws_api_gateway_integration_response" "options-integration-response" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method = aws_api_gateway_method.options-method.http_method
+  status_code = aws_api_gateway_method_response.options-method-response.status_code
+
+  depends_on = [ 
+    aws_api_gateway_method.options-method,
+    aws_api_gateway_integration.options-integration
    ]
 }
 
