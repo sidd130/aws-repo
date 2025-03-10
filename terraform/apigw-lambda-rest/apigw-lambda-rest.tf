@@ -189,6 +189,21 @@ resource "aws_iam_role" "lambda-time-exec-role" {
   })
 }
 
+# Lambda IAM policy
+resource "aws_iam_role_policy_attachment" "lambda-policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role = aws_iam_role.lambda-time-exec-role.name
+}
+
+# Lambda permission
+resource "aws_lambda_permission" "apigw-lambda-permission" {
+  statement_id = "AllowExecutionFromAPIGateway"
+  action = "lambda:InvokeFuction"
+  function_name = aws_lambda_function.aws_lambda_function.function_name
+  principal = "apigateway.amazonaws.com"
+  source_arn = "${aws_api_gateway_rest_api.apigw-lambda-rest-api.execution_arn}/*/*/*"
+}
+
 # resource "aws_api_gateway_stage" "apigw-stage" {
 #   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
 #   stage_name = "apigw-stage"
