@@ -90,6 +90,13 @@ resource "aws_api_gateway_method_response" "apigw-method-response" {
   resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
   http_method = aws_api_gateway_method.post-method.http_method
   status_code = "200"
+
+  //cors section
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
 }
 
 # POST Integration Response
@@ -99,6 +106,13 @@ resource "aws_api_gateway_integration_response" "apigw-integration-response" {
   http_method = aws_api_gateway_method.post-method.http_method
   status_code = aws_api_gateway_method_response.apigw-method-response.status_code
 
+  //cors
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" =  "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+  
   depends_on = [
     aws_api_gateway_method.post-method,
     aws_api_gateway_integration.apigw-integration
