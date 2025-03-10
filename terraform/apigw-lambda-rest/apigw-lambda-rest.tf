@@ -108,11 +108,11 @@ resource "aws_api_gateway_rest_api" "apigw-lambda-rest-api" {
   }
 }
 
-# resource "aws_api_gateway_resource" "apigw-lambda-rest-resource" {
-#   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-#   path_part = "time"
-#   parent_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.root_resource_id
-# }
+resource "aws_api_gateway_resource" "apigw-lambda-rest-resource" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  path_part = "time"
+  parent_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.root_resource_id
+}
 
 # resource "aws_api_gateway_method" "get-method" {
 #   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
