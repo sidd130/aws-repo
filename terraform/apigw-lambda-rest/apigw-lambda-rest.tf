@@ -13,59 +13,9 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-# resource "aws_iam_role" "lambda-time-exec-role" {
-#   name               = "lambda-time-exec-role"
-#   assume_role_policy = <<EOF
-#   {
-#     "Version": "2012-10-17",
-#     "Statement": [
-#         {
-#             "Action": "sts:AssumeRole",
-#             "Principal": {
-#                 "Service": "lambda.amazonaws.com"
-#             },
-#             "Effect": "Allow",
-#             "Sid": ""
-#         }
-#     ]
-#   }
-#   EOF
-# }
-
-# resource "aws_iam_role" "apigw-logging" {
-#   name = "api_gateway_cloudwatch_global"
-
-#   assume_role_policy = <<EOF
-#   {
-#   "Version": "2012-10-17",
-#   "Statement": [
-#       {
-#       "Sid": "",
-#       "Effect": "Allow",
-#       "Principal": {
-#           "Service": "apigateway.amazonaws.com"
-#       },
-#       "Action": "sts:AssumeRole"
-#       }
-#   ]
-#   }
-#   EOF
-# }
-
 # resource "aws_cloudwatch_log_group" "lambda-log-group" {
 #   name              = "/aws/lambda/${aws_lambda_function.lambda-time.function_name}"
 #   retention_in_days = 14
-# }
-
-# resource "aws_lambda_function" "lambda-time" {
-#   function_name = "lambda-time"
-#   role = aws_iam_role.lambda-time-exec-role.arn
-#   filename      = "lambda-time.zip"
-#   handler       = "handler.lambda_handler"
-#   runtime       = "python3.10"
-#   logging_config {
-#     log_format = "JSON"
-#   }
 # }
 
 # data "aws_iam_policy_document" "lambda-logging-policy-document" {
@@ -199,6 +149,7 @@ resource "aws_api_gateway_integration_response" "options-integration-response" {
   ]
 }
 
+# Deployment
 resource "aws_api_gateway_deployment" "apigw-deploy" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   depends_on = [
@@ -207,6 +158,35 @@ resource "aws_api_gateway_deployment" "apigw-deploy" {
   ]
 
   stage_name = "dev"
+}
+
+# Lambda function
+resource "aws_lambda_function" "aws_lambda_function" {
+  filename      = "lambda-time.zip"
+  function_name = "lambda-time"
+  role          = aws_iam_role.lambda-time-exec-role.arn
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.10"
+  # logging_config {
+  #   log_format = "JSON"
+  # }
+}
+
+# Lambda IAM role
+resource "aws_iam_role" "lambda-time-exec-role" {
+  name = "lambda-time-exec-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
 }
 
 # resource "aws_api_gateway_stage" "apigw-stage" {
