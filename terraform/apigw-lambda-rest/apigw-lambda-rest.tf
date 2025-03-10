@@ -79,7 +79,7 @@ resource "aws_api_gateway_integration" "apigw-integration" {
   rest_api_id             = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   resource_id             = aws_api_gateway_resource.apigw-lambda-rest-resource.id
   http_method             = aws_api_gateway_method.post-method.http_method
-  type                    = "MOCK"
+  type                    = "AWS"
   integration_http_method = "POST"
   # uri                     = aws_lambda_function.lambda-time.invoke_arn
 }
