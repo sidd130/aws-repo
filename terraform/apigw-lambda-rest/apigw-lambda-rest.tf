@@ -157,6 +157,13 @@ resource "aws_api_gateway_integration_response" "options-integration-response" {
   http_method = aws_api_gateway_method.options-method.http_method
   status_code = aws_api_gateway_method_response.options-method-response.status_code
 
+  //cors
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" =  "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+  
   depends_on = [
     aws_api_gateway_method.options-method,
     aws_api_gateway_integration.options-integration
