@@ -81,7 +81,7 @@ resource "aws_api_gateway_integration" "apigw-integration" {
   http_method             = aws_api_gateway_method.post-method.http_method
   type                    = "AWS"
   integration_http_method = "POST"
-  uri                     = aws_lambda_function.lambda-time.invoke_arn
+  uri                     = aws_lambda_function.aws_lambda_function.invoke_arn
 }
 
 # POST Method Response
