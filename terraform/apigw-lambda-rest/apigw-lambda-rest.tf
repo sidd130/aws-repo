@@ -202,10 +202,11 @@ resource "aws_api_gateway_integration_response" "options-integration-response" {
 resource "aws_api_gateway_deployment" "apigw-deploy" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
   depends_on = [
-    aws_api_gateway_rest_api.apigw-lambda-rest-api,
-    aws_api_gateway_method.post-method,
-    aws_api_gateway_method.options-method
+    aws_api_gateway_integration.apigw-integration,
+    aws_api_gateway_integration.options-integration
   ]
+
+  stage_name = "dev"
 }
 
 # resource "aws_api_gateway_stage" "apigw-stage" {
