@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     aws = {
-        source = "hashicorp/aws"
-        version = "~>5.41"
+      source  = "hashicorp/aws"
+      version = "~>5.41"
     }
   }
 
@@ -110,37 +110,48 @@ resource "aws_api_gateway_rest_api" "apigw-lambda-rest-api" {
 
 resource "aws_api_gateway_resource" "apigw-lambda-rest-resource" {
   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-  path_part = "time"
-  parent_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.root_resource_id
+  path_part   = "time"
+  parent_id   = aws_api_gateway_rest_api.apigw-lambda-rest-api.root_resource_id
 }
 
-# resource "aws_api_gateway_method" "get-method" {
-#   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-#   resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
-#   http_method = "GET"
-#   authorization = "NONE"
-# }
+resource "aws_api_gateway_method" "post-method" {
+  rest_api_id   = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id   = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
 
-# resource "aws_api_gateway_method_response" "apigw-method-response" {
-#   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-#   resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
-#   http_method = aws_api_gateway_method.get-method.http_method
-#   status_code = "200"
-# }
+resource "aws_api_gateway_integration" "apigw-integration" {
+  rest_api_id             = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id             = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method             = aws_api_gateway_method.post-method.http_method
+  type                    = "MOCK"
+  integration_http_method = "POST"
+  # uri                     = aws_lambda_function.lambda-time.invoke_arn
+}
 
-# resource "aws_api_gateway_integration" "apigw-integration" {
-#   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-#   resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
-#   type = "AWS_PROXY"
-#   integration_http_method = "POST"
-#   http_method = aws_api_gateway_method.get-method.http_method
-#   uri = aws_lambda_function.lambda-time.invoke_arn
-  
-# }
+resource "aws_api_gateway_method_response" "apigw-method-response" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method = aws_api_gateway_method.post-method.http_method
+  status_code = "200"
+}
+
+resource "aws_api_gateway_integration_response" "apigw-integration-response" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method = aws_api_gateway_method.post-method.http_method
+  status_code = aws_api_gateway_method_response.apigw-method-response.status_code
+
+  depends_on = [ 
+    aws_api_gateway_method.post-method,
+    aws_api_gateway_integration.apigw-integration
+   ]
+}
 
 # resource "aws_api_gateway_deployment" "apigw-deploy" {
 #   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-#   depends_on = [ aws_api_gateway_rest_api.apigw-lambda-rest-api, aws_api_gateway_method.get-method]
+#   depends_on = [ aws_api_gateway_rest_api.apigw-lambda-rest-api, aws_api_gateway_method.post-method]
 # }
 
 # resource "aws_api_gateway_stage" "apigw-stage" {
