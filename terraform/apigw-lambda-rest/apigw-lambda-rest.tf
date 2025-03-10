@@ -149,27 +149,27 @@ resource "aws_api_gateway_integration_response" "apigw-integration-response" {
   http_method = aws_api_gateway_method.post-method.http_method
   status_code = aws_api_gateway_method_response.apigw-method-response.status_code
 
-  depends_on = [ 
+  depends_on = [
     aws_api_gateway_method.post-method,
     aws_api_gateway_integration.apigw-integration
-   ]
+  ]
 }
 
 # OPTIONS Method
 resource "aws_api_gateway_method" "options-method" {
-  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
-  http_method = "OPTIONS"
+  rest_api_id   = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id   = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method   = "OPTIONS"
   authorization = "NONE"
 }
 
 # OPTIONS Integration
 resource "aws_api_gateway_integration" "options-integration" {
-  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-  resource_id = aws_api_gateway_resource.apigw-lambda-rest-resource.id
-  http_method = aws_api_gateway_method.options-method.http_method
+  rest_api_id             = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  resource_id             = aws_api_gateway_resource.apigw-lambda-rest-resource.id
+  http_method             = aws_api_gateway_method.options-method.http_method
   integration_http_method = "OPTIONS"
-  type = "MOCK"
+  type                    = "MOCK"
 }
 
 # OPTIONS Method Response
@@ -193,16 +193,19 @@ resource "aws_api_gateway_integration_response" "options-integration-response" {
   http_method = aws_api_gateway_method.options-method.http_method
   status_code = aws_api_gateway_method_response.options-method-response.status_code
 
-  depends_on = [ 
+  depends_on = [
     aws_api_gateway_method.options-method,
     aws_api_gateway_integration.options-integration
-   ]
+  ]
 }
 
-# resource "aws_api_gateway_deployment" "apigw-deploy" {
-#   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
-#   depends_on = [ aws_api_gateway_rest_api.apigw-lambda-rest-api, aws_api_gateway_method.post-method]
-# }
+resource "aws_api_gateway_deployment" "apigw-deploy" {
+  rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
+  depends_on = [
+    aws_api_gateway_rest_api.apigw-lambda-rest-api,
+    aws_api_gateway_method.post-method
+  ]
+}
 
 # resource "aws_api_gateway_stage" "apigw-stage" {
 #   rest_api_id = aws_api_gateway_rest_api.apigw-lambda-rest-api.id
