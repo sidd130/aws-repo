@@ -16,10 +16,6 @@ provider "aws" {
 data "aws_iam_policy_document" "sqs-policy-doc" {
     statement {
       sid = "sqs-policy-doc"
-      principals {
-        type = "User"
-        identifiers = [ "arn:aws:iam::438801865484:user/sqs_rw_user" ]
-      }
       actions = ["sqs:SendMessage"]
       resources = [aws_sqs_queue.event-collector.arn]
     }
