@@ -2,6 +2,7 @@ import boto3
 from botocore.config import Config
 import json
 import maskpass
+import uuid
 
 access_key = maskpass.askpass('Enter Access Key: ')
 secret_access_key = maskpass.askpass('Enter Secret Access Key: ')
@@ -10,8 +11,9 @@ sqs_client = boto3.client('sqs',
                           aws_access_key_id=access_key,
                           aws_secret_access_key=secret_access_key,
                           config=config)
+uniq_id = uuid.uuid5()
 response = sqs_client.send_message(
     QueueUrl='event-collector-queue',
-    MessageBody=json.dumps({"Status": 200})
+    MessageBody=json.dumps({"status": 200, "uniqueID": uniq_id})
     )
 print(response)
