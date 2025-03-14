@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "lambda-exec-policy-doc" {
       "sqs:GetQueueAttributes",
       "sqs:DeleteMessage"
     ]
-    resources = [aws_sqs_queue.event-collector.arn]
+    # resources = [aws_sqs_queue.event-collector.arn]
   }
 
   statement {
