@@ -57,9 +57,9 @@ resource "aws_lambda_function" "event-processor" {
   depends_on = [aws_sqs_queue.event-collector]
 }
 
-resource "aws_lambda_event_source_mapping" "" {
-  function_name = aws_lambda_function.event-processor.name
-  event_source_arn = aws_sqs_queue.event-collector.name
+resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
+  function_name = aws_lambda_function.event-processor.arn
+  event_source_arn = aws_sqs_queue.event-collector.arn
 }
 
 resource "aws_sqs_queue" "event-collector" {
