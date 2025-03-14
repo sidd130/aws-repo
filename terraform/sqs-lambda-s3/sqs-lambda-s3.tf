@@ -80,18 +80,20 @@ resource "aws_sqs_queue" "event-collector" {
 resource "aws_sqs_queue_policy" "event-collector-policy" {
   queue_url = aws_sqs_queue.event-collector.arn
   policy = jsonencode({
-    "Version" = "2012-10-17"
-    "Statement" = [
+    Version = "2012-10-17"
+    Statement = [
       {
-        "Sid"       = "sqs-policy-doc"
-        "Effect"    = "Allow"
-        "Principal" = aws_lambda_function.event-processor.arn
-        "Action" = [
+        Sid       = "sqs-policy-doc"
+        Effect    = "Allow"
+        Principal = {
+          "AWS" = aws_lambda_function.event-processor.arn
+        }
+        Action = [
           "sqs:ReceiveMessage",
           "sqs:GetQueueAttributes",
           "sqs:DeleteMessage"
         ]
-        "Resource" = aws_sqs_queue.event-collector.arn
+        Resource = aws_sqs_queue.event-collector.arn
       }
     ]
   })
