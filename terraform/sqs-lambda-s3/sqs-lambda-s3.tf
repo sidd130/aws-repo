@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "sqs-policy-doc" {
     }
   }
 
-  depends_on = [aws_sqs_queue.event-collector]
+  depends_on = [ aws_sqs_queue.event-collector,aws_lambda_function.event-processor ]
 }
 
 data "aws_iam_policy_document" "lambda-exec-policy-doc" {
@@ -56,12 +56,13 @@ resource "aws_lambda_function" "event-processor" {
   runtime       = "python3.12"
   role          = aws_iam_role.event-collector-exec-role.arn
 
-  depends_on = [aws_sqs_queue.event-collector]
+  depends_on = [aws_sqs_queue.event-collector,event-collector-exec-role]
 }
 
 resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
   function_name = aws_lambda_function.event-processor.arn
   event_source_arn = aws_sqs_queue.event-collector.arn
+  depends_on = [ aws_lambda_function.event-processor,aws_sqs_queue.event-collector ]
 }
 
 resource "aws_sqs_queue" "event-collector" {
