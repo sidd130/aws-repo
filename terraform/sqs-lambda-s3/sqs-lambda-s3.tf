@@ -50,7 +50,7 @@ resource "aws_iam_role" "event-collector-exec-role" {
 
 resource "aws_lambda_function" "event-processor" {
   function_name = "event-processer"
-  filename      = "event-processer.zip"
+  filename      = "sqs-lambda-s3.zip"
   handler       = "handler.py"
   runtime       = "python3.12"
   role          = aws_iam_role.event-collector-exec-role.arn
