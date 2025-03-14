@@ -55,7 +55,7 @@ resource "aws_lambda_function" "event-processor" {
   runtime       = "python3.12"
   role          = aws_iam_role.event-collector-exec-role.arn
 
-  depends_on = [aws_sqs_queue.event-collector.arn]
+  depends_on = [aws_sqs_queue.event-collector]
 }
 
 resource "aws_sqs_queue" "event-collector" {
