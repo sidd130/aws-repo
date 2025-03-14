@@ -44,8 +44,8 @@ data "aws_iam_policy_document" "lambda-exec-policy-doc" {
   }
 }
 
-resource "aws_iam_role" "event-collector-exec-role" {
-    name = "event-collector-exec-role"
+resource "aws_iam_role" "event-processor-exec-role" {
+    name = "event-processor-exec-role"
     assume_role_policy = data.aws_iam_policy_document.lambda-exec-policy-doc.json
 }
 
@@ -54,9 +54,9 @@ resource "aws_lambda_function" "event-processor" {
   filename      = "sqs-lambda-s3.zip"
   handler       = "handler.py"
   runtime       = "python3.12"
-  role          = aws_iam_role.event-collector-exec-role.arn
+  role          = aws_iam_role.event-processor-exec-role.arn
 
-  depends_on = [aws_sqs_queue.event-collector,event-collector-exec-role]
+  depends_on = [aws_sqs_queue.event-collector,aws_iam_role.event-processor-exec-role]
 }
 
 resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
