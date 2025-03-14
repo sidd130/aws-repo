@@ -49,7 +49,6 @@ data "aws_iam_policy_document" "lambda-exec-policy-doc" {
       "sqs:DeleteMessage"
     ]
     effect = "Allow"
-    resources = [aws_sqs_queue.event-collector.arn]
   }
 }
 
