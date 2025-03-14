@@ -14,6 +14,7 @@ provider "aws" {
 }
 
 data "aws_iam_policy_document" "sqs-policy-doc" {
+  version = "2012-10-17"
   statement {
     sid = "sqs-policy-doc"
     actions = [
@@ -44,18 +45,6 @@ data "aws_iam_policy_document" "lambda-exec-policy-doc" {
       identifiers = ["lambda.amazonaws.com"]
     }
   }
-  # statement {
-  #   actions = [
-  #     "sqs:ReceiveMessage",
-  #     "sqs:GetQueueAttributes",
-  #     "sqs:DeleteMessage"
-  #   ]
-  #   effect = "Allow"
-  #   principals {
-  #     type        = "Service"
-  #     identifiers = ["lambda.amazonaws.com"]
-  #   }
-  # }
 }
 
 resource "aws_iam_role" "event-processor-exec-role" {
@@ -73,11 +62,15 @@ resource "aws_lambda_function" "event-processor" {
   depends_on = [aws_sqs_queue.event-collector, aws_iam_role.event-processor-exec-role]
 }
 
-# resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
-#   function_name    = aws_lambda_function.event-processor.arn
-#   event_source_arn = aws_sqs_queue.event-collector.arn
-#   depends_on       = [aws_lambda_function.event-processor, aws_sqs_queue.event-collector]
-# }
+resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
+  function_name    = aws_lambda_function.event-processor.arn
+  event_source_arn = aws_sqs_queue.event-collector.arn
+  depends_on = [
+    aws_lambda_function.event-processor,
+    aws_sqs_queue.event-collector,
+    aws_sqs_queue_policy.event-collector-policy
+  ]
+}
 
 resource "aws_sqs_queue" "event-collector" {
   name             = "event-collector-queue"
@@ -86,5 +79,5 @@ resource "aws_sqs_queue" "event-collector" {
 
 resource "aws_sqs_queue_policy" "event-collector-policy" {
   queue_url = aws_sqs_queue.event-collector.id
-  policy    = data.aws_iam_policy_document.sqs-policy-doc.json
+  policy    = data.aws_iam_policy_document.sqs-policy-doc
 }
