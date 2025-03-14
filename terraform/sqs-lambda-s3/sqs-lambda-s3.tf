@@ -31,7 +31,6 @@ data "aws_iam_policy_document" "lambda-exec-policy-doc" {
       "sqs:GetQueueAttributes",
       "sqs:DeleteMessage"
     ]
-    # resources = [aws_sqs_queue.event-collector.arn]
   }
 
   statement {
@@ -56,6 +55,11 @@ resource "aws_lambda_function" "event-processor" {
   role          = aws_iam_role.event-collector-exec-role.arn
 
   depends_on = [aws_sqs_queue.event-collector]
+}
+
+resource "aws_lambda_event_source_mapping" "" {
+  function_name = aws_lambda_function.event-processor.arn
+  event_source_arn = aws_sqs_queue.event-collector.arn
 }
 
 resource "aws_sqs_queue" "event-collector" {
