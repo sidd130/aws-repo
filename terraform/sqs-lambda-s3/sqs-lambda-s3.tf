@@ -13,26 +13,26 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-data "aws_iam_policy_document" "sqs-policy-doc" {
-  version = "2012-10-17"
-  statement {
-    sid = "sqs-policy-doc"
-    actions = [
-      "sqs:ReceiveMessage",
-      "sqs:GetQueueAttributes",
-      "sqs:DeleteMessage"
-    ]
-    resources = [aws_sqs_queue.event-collector.arn]
-    principals {
-      type = "AWS"
-      identifiers = [
-        aws_lambda_function.event-processor.arn
-      ]
-    }
-  }
+# data "aws_iam_policy_document" "sqs-policy-doc" {
+#   version = "2012-10-17"
+#   statement {
+#     sid = "sqs-policy-doc"
+#     actions = [
+#       "sqs:ReceiveMessage",
+#       "sqs:GetQueueAttributes",
+#       "sqs:DeleteMessage"
+#     ]
+#     resources = [aws_sqs_queue.event-collector.arn]
+#     principals {
+#       type = "AWS"
+#       identifiers = [
+#         aws_lambda_function.event-processor.arn
+#       ]
+#     }
+#   }
 
-  depends_on = [aws_sqs_queue.event-collector, aws_lambda_function.event-processor]
-}
+#   depends_on = [aws_sqs_queue.event-collector, aws_lambda_function.event-processor]
+# }
 
 data "aws_iam_policy_document" "lambda-exec-policy-doc" {
   statement {
@@ -78,6 +78,21 @@ resource "aws_sqs_queue" "event-collector" {
 }
 
 resource "aws_sqs_queue_policy" "event-collector-policy" {
-  queue_url = aws_sqs_queue.event-collector.id
-  policy    = data.aws_iam_policy_document.sqs-policy-doc.json
+  queue_url = aws_sqs_queue.event-collector.arn
+  policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Sid"       = "sqs-policy-doc"
+        "Effect"    = "Allow"
+        "Principal" = aws_lambda_function.event-processor.arn
+        "Action" = [
+          "sqs:ReceiveMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:DeleteMessage"
+        ]
+        "Resource" = aws_sqs_queue.event-collector.arn
+      }
+    ]
+  })
 }
