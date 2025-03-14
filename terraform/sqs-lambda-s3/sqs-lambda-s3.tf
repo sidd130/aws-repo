@@ -58,8 +58,8 @@ resource "aws_lambda_function" "event-processor" {
 }
 
 resource "aws_lambda_event_source_mapping" "" {
-  function_name = aws_lambda_function.event-processor.arn
-  event_source_arn = aws_sqs_queue.event-collector.arn
+  function_name = aws_lambda_function.event-processor.name
+  event_source_arn = aws_sqs_queue.event-collector.name
 }
 
 resource "aws_sqs_queue" "event-collector" {
