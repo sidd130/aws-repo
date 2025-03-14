@@ -79,5 +79,5 @@ resource "aws_sqs_queue" "event-collector" {
 
 resource "aws_sqs_queue_policy" "event-collector-policy" {
   queue_url = aws_sqs_queue.event-collector.id
-  policy    = data.aws_iam_policy_document.sqs-policy-doc
+  policy    = data.aws_iam_policy_document.sqs-policy-doc.json
 }
