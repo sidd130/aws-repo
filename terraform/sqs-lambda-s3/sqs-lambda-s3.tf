@@ -83,10 +83,9 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "sqs-policy-doc"
         Effect    = "Allow"
         Principal = {
-          "AWS" = aws_lambda_function.event-processor.arn
+          Service = "lambda.amazonaws.com"
         }
         Action = [
           "sqs:ReceiveMessage",
@@ -94,6 +93,11 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
           "sqs:DeleteMessage"
         ]
         Resource = aws_sqs_queue.event-collector.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_lambda_function.event-processor.arn
+          }
+        }
       }
     ]
   })
