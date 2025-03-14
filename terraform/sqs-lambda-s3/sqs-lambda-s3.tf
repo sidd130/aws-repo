@@ -49,6 +49,10 @@ data "aws_iam_policy_document" "lambda-exec-policy-doc" {
       "sqs:DeleteMessage"
     ]
     effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
   }
 }
 
