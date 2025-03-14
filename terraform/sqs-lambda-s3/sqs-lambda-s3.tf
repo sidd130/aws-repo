@@ -15,9 +15,17 @@ provider "aws" {
 
 data "aws_iam_policy_document" "sqs-policy-doc" {
   statement {
-    sid       = "sqs-policy-doc"
-    actions   = ["sqs:SendMessage"]
+    sid = "lambda-access-policy-doc"
+    actions = [
+      "sqs:ReceiveMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:DeleteMessage"
+    ]
     resources = [aws_sqs_queue.event-collector.arn]
+    principals {
+      type = "AWS"
+      identifiers = [ aws_lambda_function.event-processor.arn ]
+    }
   }
 
   depends_on = [aws_sqs_queue.event-collector]
@@ -25,25 +33,11 @@ data "aws_iam_policy_document" "sqs-policy-doc" {
 
 data "aws_iam_policy_document" "lambda-exec-policy-doc" {
   statement {
-    sid = "lambda-sqs-policy-doc"
-    actions = [
-      "sqs:ReceiveMessage",
-      "sqs:GetQueueAttributes",
-      "sqs:DeleteMessage"
-    ]
-    principals {
-      type = "AWS"
-      identifiers = [ "lambda.amazonaws.com" ]
-    }
-  }
-
-  statement {
     sid = "lambda-auth-policy-doc"
     actions = [
       "sts:AssumeRole"
     ]
   }
-  depends_on = [aws_sqs_queue.event-collector]
 }
 
 resource "aws_iam_role" "event-collector-exec-role" {
