@@ -15,7 +15,7 @@ provider "aws" {
 
 data "aws_iam_policy_document" "sqs-policy-doc" {
   statement {
-    sid = "lambda-access-policy-doc"
+    sid = "sqs-policy-doc"
     actions = [
       "sqs:ReceiveMessage",
       "sqs:GetQueueAttributes",
@@ -23,8 +23,10 @@ data "aws_iam_policy_document" "sqs-policy-doc" {
     ]
     resources = [aws_sqs_queue.event-collector.arn]
     principals {
-      type        = "AWS"
-      identifiers = [aws_lambda_function.event-processor.arn]
+      type = "AWS"
+      identifiers = [
+        aws_lambda_function.event-processor.arn
+      ]
     }
   }
 
@@ -42,18 +44,18 @@ data "aws_iam_policy_document" "lambda-exec-policy-doc" {
       identifiers = ["lambda.amazonaws.com"]
     }
   }
-  statement {
-    actions = [
-      "sqs:ReceiveMessage",
-      "sqs:GetQueueAttributes",
-      "sqs:DeleteMessage"
-    ]
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-  }
+  # statement {
+  #   actions = [
+  #     "sqs:ReceiveMessage",
+  #     "sqs:GetQueueAttributes",
+  #     "sqs:DeleteMessage"
+  #   ]
+  #   effect = "Allow"
+  #   principals {
+  #     type        = "Service"
+  #     identifiers = ["lambda.amazonaws.com"]
+  #   }
+  # }
 }
 
 resource "aws_iam_role" "event-processor-exec-role" {
@@ -82,7 +84,7 @@ resource "aws_sqs_queue" "event-collector" {
   max_message_size = 2048
 }
 
-# resource "aws_sqs_queue_policy" "event-collector-policy" {
-#   queue_url = aws_sqs_queue.event-collector.id
-#   policy    = data.aws_iam_policy_document.sqs-policy-doc.json
-# }
+resource "aws_sqs_queue_policy" "event-collector-policy" {
+  queue_url = aws_sqs_queue.event-collector.id
+  policy    = data.aws_iam_policy_document.sqs-policy-doc.json
+}
