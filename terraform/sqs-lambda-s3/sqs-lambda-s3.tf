@@ -31,6 +31,10 @@ data "aws_iam_policy_document" "lambda-exec-policy-doc" {
       "sqs:GetQueueAttributes",
       "sqs:DeleteMessage"
     ]
+    principals {
+      type = "AWS"
+      identifiers = [ "lambda.amazonaws.com" ]
+    }
   }
 
   statement {
