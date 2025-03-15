@@ -85,9 +85,6 @@ resource "aws_iam_policy" "event-processor-policy" {
     Statement = [
       {
         Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
         Action = [
           "sts:AssumeRole"
         ]
