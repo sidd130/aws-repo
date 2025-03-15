@@ -48,9 +48,39 @@ provider "aws" {
 #   }
 # }
 
+resource "aws_lambda_function" "event-processor" {
+  function_name = "event-processor"
+  filename      = "sqs-lambda-s3.zip"
+  handler       = "handler.py"
+  runtime       = "python3.12"
+  role          = aws_iam_role.event-processor-exec-role.arn
+
+  depends_on = [
+    aws_iam_role.event-processor-exec-role
+  ]
+}
+
 resource "aws_iam_role" "event-processor-exec-role" {
   name = "event-processor-exec-role"
   assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "event-processor-policy" {
+  name = "event-processor-policy"
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -66,15 +96,11 @@ resource "aws_iam_role" "event-processor-exec-role" {
   })
 }
 
-resource "aws_lambda_function" "event-processor" {
-  function_name = "event-processer"
-  filename      = "sqs-lambda-s3.zip"
-  handler       = "handler.py"
-  runtime       = "python3.12"
-  role          = aws_iam_role.event-processor-exec-role.arn
-
-  depends_on = [aws_sqs_queue.event-collector, aws_iam_role.event-processor-exec-role]
+resource "aws_iam_role_policy_attachment" "lambda-exec-role-policy" {
+  policy_arn = aws_iam_policy.event-processor-policy.arn
+  role       = aws_iam_role.event-processor-exec-role.name
 }
+
 
 # resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
 #   function_name    = aws_lambda_function.event-processor.function_name
@@ -115,4 +141,9 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
       }
     ]
   })
+
+  depends_on = [
+    aws_sqs_queue.event-collector,
+    aws_lambda_function.event-processor
+  ]
 }
