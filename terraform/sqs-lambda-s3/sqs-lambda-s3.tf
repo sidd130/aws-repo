@@ -34,22 +34,36 @@ provider "aws" {
 #   depends_on = [aws_sqs_queue.event-collector, aws_lambda_function.event-processor]
 # }
 
-data "aws_iam_policy_document" "lambda-exec-policy-doc" {
-  statement {
-    actions = [
-      "sts:AssumeRole"
-    ]
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-  }
-}
+# data "aws_iam_policy_document" "lambda-exec-policy-doc" {
+#   version = "2012-10-17"
+#   statement {
+#     actions = [
+#       "sts:AssumeRole"
+#     ]
+#     effect = "Allow"
+#     principals {
+#       type        = "Service"
+#       identifiers = ["lambda.amazonaws.com"]
+#     }
+#   }
+# }
 
 resource "aws_iam_role" "event-processor-exec-role" {
-  name               = "event-processor-exec-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda-exec-policy-doc.json
+  name = "event-processor-exec-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
 }
 
 resource "aws_lambda_function" "event-processor" {
@@ -83,7 +97,7 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "lambda.amazonaws.com"
         }
