@@ -84,7 +84,7 @@ resource "aws_iam_policy" "event-processor-policy" {
         Action = [
           "sts:AssumeRole"
         ]
-        Resource = [aws_sqs_queue.event-processor.arn]
+        Resource = [aws_lambda_function.event-processor.arn]
       }
     ]
   })
