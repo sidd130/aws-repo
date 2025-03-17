@@ -88,20 +88,17 @@ resource "aws_iam_policy" "event-processor-policy" {
       },
       {
         Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
         Action = [
           "sqs:ReceiveMessage",
           "sqs:GetQueueAttributes",
           "sqs:DeleteMessage"
         ]
         Resource = aws_sqs_queue.event-collector.arn
-        Condition = {
-          ArnEquals = {
-            "aws:SourceArn" = aws_lambda_function.event-processor.arn
-          }
-        }
+        # Condition = {
+        #   ArnEquals = {
+        #     "aws:SourceArn" = aws_lambda_function.event-processor.arn
+        #   }
+        # }
       }
     ]
   })
@@ -120,7 +117,8 @@ resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
   depends_on = [
     aws_lambda_function.event-processor,
     aws_sqs_queue.event-collector,
-    aws_sqs_queue_policy.event-collector-policy
+    aws_sqs_queue_policy.event-collector-policy,
+    aws_iam_policy.event-processor-policy
   ]
 }
 
