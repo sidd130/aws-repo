@@ -17,7 +17,7 @@ provider "aws" {
 resource "aws_lambda_function" "event-processor" {
   function_name = "event-processor"
   filename      = "sqs-lambda-s3.zip"
-  handler       = "handler.py"
+  handler       = "handler.lambda_handler"
   runtime       = "python3.12"
   role          = aws_iam_role.event-processor-exec-role.arn
 }
