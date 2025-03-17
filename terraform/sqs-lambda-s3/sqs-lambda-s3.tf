@@ -67,10 +67,16 @@ resource "aws_iam_policy" "event-processor-policy" {
   })
 }
 
-# Attach policy to Lambda execution role
+# Attach policy to Lambda execution role for SQS permissions
 resource "aws_iam_role_policy_attachment" "lambda-exec-role-policy" {
   policy_arn = aws_iam_policy.event-processor-policy.arn
   role       = aws_iam_role.event-processor-exec-role.name
+}
+
+# Attach policy to Lambda exec role for CloudWatch permissions
+resource "aws_iam_role_policy_attachment" "lambda-policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role = aws_iam_role.event-processor-exec-role.name
 }
 
 # Event source mapping to create a trigger for Lambda to read from SQS queue
