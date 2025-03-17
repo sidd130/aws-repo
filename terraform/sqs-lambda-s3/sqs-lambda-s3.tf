@@ -13,41 +13,7 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-# data "aws_iam_policy_document" "sqs-policy-doc" {
-#   version = "2012-10-17"
-#   statement {
-#     sid = "sqs-policy-doc"
-#     actions = [
-#       "sqs:ReceiveMessage",
-#       "sqs:GetQueueAttributes",
-#       "sqs:DeleteMessage"
-#     ]
-#     resources = [aws_sqs_queue.event-collector.arn]
-#     principals {
-#       type = "AWS"
-#       identifiers = [
-#         aws_lambda_function.event-processor.arn
-#       ]
-#     }
-#   }
-
-#   depends_on = [aws_sqs_queue.event-collector, aws_lambda_function.event-processor]
-# }
-
-# data "aws_iam_policy_document" "lambda-exec-policy-doc" {
-#   version = "2012-10-17"
-#   statement {
-#     actions = [
-#       "sts:AssumeRole"
-#     ]
-#     effect = "Allow"
-#     principals {
-#       type        = "Service"
-#       identifiers = ["lambda.amazonaws.com"]
-#     }
-#   }
-# }
-
+# Lambda function
 resource "aws_lambda_function" "event-processor" {
   function_name = "event-processor"
   filename      = "sqs-lambda-s3.zip"
@@ -56,6 +22,7 @@ resource "aws_lambda_function" "event-processor" {
   role          = aws_iam_role.event-processor-exec-role.arn
 }
 
+# Lambda execution role
 resource "aws_iam_role" "event-processor-exec-role" {
   name = "event-processor-exec-role"
   assume_role_policy = jsonencode({
@@ -74,6 +41,7 @@ resource "aws_iam_role" "event-processor-exec-role" {
   })
 }
 
+# Lambda exec role policy
 resource "aws_iam_policy" "event-processor-policy" {
   name = "event-processor-policy"
   policy = jsonencode({
@@ -94,22 +62,18 @@ resource "aws_iam_policy" "event-processor-policy" {
           "sqs:DeleteMessage"
         ]
         Resource = aws_sqs_queue.event-collector.arn
-        # Condition = {
-        #   ArnEquals = {
-        #     "aws:SourceArn" = aws_lambda_function.event-processor.arn
-        #   }
-        # }
       }
     ]
   })
 }
 
+# Attach policy to Lambda execution role
 resource "aws_iam_role_policy_attachment" "lambda-exec-role-policy" {
   policy_arn = aws_iam_policy.event-processor-policy.arn
   role       = aws_iam_role.event-processor-exec-role.name
 }
 
-
+# Event source mapping to create a trigger for Lambda to read from SQS queue
 resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
   function_name    = aws_lambda_function.event-processor.arn
   event_source_arn = aws_sqs_queue.event-collector.arn
@@ -122,11 +86,13 @@ resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
   ]
 }
 
+# SQS Queue
 resource "aws_sqs_queue" "event-collector" {
   name             = "event-collector-queue"
   max_message_size = 2048
 }
 
+# SQS queue policy
 resource "aws_sqs_queue_policy" "event-collector-policy" {
   queue_url = aws_sqs_queue.event-collector.url
   policy = jsonencode({
