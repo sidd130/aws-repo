@@ -97,7 +97,7 @@ resource "aws_iam_role_policy_attachment" "lambda-exec-role-policy" {
 
 
 resource "aws_lambda_event_source_mapping" "event-processor-event-src-map" {
-  function_name    = aws_lambda_function.event-processor.function_name
+  function_name    = aws_lambda_function.event-processor.arn
   event_source_arn = aws_sqs_queue.event-collector.arn
   depends_on = [
     aws_lambda_function.event-processor,
