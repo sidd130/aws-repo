@@ -54,10 +54,6 @@ resource "aws_lambda_function" "event-processor" {
   handler       = "handler.py"
   runtime       = "python3.12"
   role          = aws_iam_role.event-processor-exec-role.arn
-
-  depends_on = [
-    aws_iam_role.event-processor-exec-role
-  ]
 }
 
 resource "aws_iam_role" "event-processor-exec-role" {
@@ -88,6 +84,7 @@ resource "aws_iam_policy" "event-processor-policy" {
         Action = [
           "sts:AssumeRole"
         ]
+        Resource = [aws_sqs_queue.event-processor.arn]
       }
     ]
   })
