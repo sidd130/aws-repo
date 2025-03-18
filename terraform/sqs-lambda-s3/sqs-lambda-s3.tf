@@ -68,7 +68,10 @@ resource "aws_iam_policy" "event-processor-policy" {
         Action = [
           "s3:PutObject"
         ]
-        Resource = aws_s3_bucket.event-storage.arn
+        Resource = [
+          "${aws_s3_bucket.event-storage.arn}",
+          "${aws_s3_bucket.event-storage.arn}/*",
+        ]
       }
     ]
   })
@@ -83,7 +86,7 @@ resource "aws_iam_role_policy_attachment" "lambda-exec-role-policy" {
 # Attach policy to Lambda exec role for CloudWatch permissions
 resource "aws_iam_role_policy_attachment" "lambda-policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role = aws_iam_role.event-processor-exec-role.name
+  role       = aws_iam_role.event-processor-exec-role.name
 }
 
 # Event source mapping to create a trigger for Lambda to read from SQS queue
@@ -138,7 +141,7 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
 }
 
 resource "aws_s3_bucket" "event-storage" {
-  bucket = "event-storage-bucket-20250319"
+  bucket        = "event-storage-bucket-20250319"
   force_destroy = true
   tags = {
     Name = "event-storage"
@@ -147,7 +150,7 @@ resource "aws_s3_bucket" "event-storage" {
 
 data "aws_iam_policy_document" "bucket-policy" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["s3:PutObject"]
     principals {
       type = "Service"
@@ -160,9 +163,9 @@ data "aws_iam_policy_document" "bucket-policy" {
       "${aws_s3_bucket.event-storage.arn}/*",
     ]
     condition {
-      test = "ArnEquals"
+      test     = "ArnEquals"
       variable = "aws:SourceArn"
-      values = ["${aws_lambda_function.event-processor.arn}"]
+      values   = ["${aws_lambda_function.event-processor.arn}"]
     }
   }
 }
