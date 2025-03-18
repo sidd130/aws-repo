@@ -7,7 +7,7 @@ import boto3.s3
 def lambda_handler(event, context):
     print(event['Records'][0]['body'])
     print(context)
-    file_name = 'request_' + event['Records'][0]['body']["uniqueID"] + '.json'
+    file_name = 'request_' + json.loads(event['Records'][0]['body'])["uniqueID"] + '.json'
     with open(file=file_name,mode="w") as file_handle:
         file_handle.write(event['Records'][0]['body'])
     config = Config(region_name='ap-south-1')
