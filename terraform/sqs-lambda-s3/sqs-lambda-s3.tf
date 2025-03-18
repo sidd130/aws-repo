@@ -131,7 +131,7 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
 }
 
 resource "aws_s3_bucket" "event-storage" {
-  bucket = "event-storage"
+  bucket = "event-storage-bucket-20250319"
   force_destroy = true
   tags = {
     Name = "event-storage"
