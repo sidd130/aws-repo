@@ -62,6 +62,13 @@ resource "aws_iam_policy" "event-processor-policy" {
           "sqs:DeleteMessage"
         ]
         Resource = aws_sqs_queue.event-collector.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject"
+        ]
+        Resource = aws_s3_bucket.event-storage.arn
       }
     ]
   })
@@ -160,7 +167,7 @@ resource "aws_s3_bucket_policy" "event-storage-bucket-policy" {
         Effect = "Allow"
         Action = "s3:PutObject"
         Principal = {
-          AWS = "${aws_lambda_function.event-processor.arn}"
+          Service = "lambda.amazonaws.com"
         }
       }
     ]
