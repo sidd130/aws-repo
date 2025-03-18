@@ -8,16 +8,14 @@ def lambda_handler(event, context):
     print(event['Records'][0]['body'])
     print(context)
     file_name = 'request_' + json.loads(event['Records'][0]['body'])["uniqueID"] + '.json'
-    with open(file=file_name,mode="w") as file_handle:
-        file_handle.write(event['Records'][0]['body'])
+    request_body = event['Records'][0]['body']
+    
     config = Config(region_name='ap-south-1')
     s3_client = boto3.client('s3',config=config)
     resp = s3_client.put_object(
-        Body=file_name,
+        Body=str(request_body).encode(encoding="utf-8"),
         Bucket='event-storage-bucket-20250319',
         Key=file_name
     )
-    print(resp)
-
-
     
+    print(resp)
