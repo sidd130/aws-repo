@@ -129,3 +129,29 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
     aws_lambda_function.event-processor
   ]
 }
+
+resource "aws_s3_bucket" "event-storage" {
+  bucket = "event-storage"
+  force_destroy = true
+  tags = {
+    Name = "event-storage"
+  }
+}
+
+data "aws_iam_policy_document" "bucket-policy" {
+  statement {
+    effect = "Allow"
+    actions = "s3:PutObject"
+    principals {
+      type = "AWS"
+      identifiers = [
+        aws_lambda_function.event-processor.arn
+      ]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "event-storage-bucket-policy" {
+  bucket = aws_s3_bucket.event-storage.id
+  policy = data.aws_iam_policy_document.bucket-policy.json
+}
