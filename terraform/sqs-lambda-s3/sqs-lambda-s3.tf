@@ -159,6 +159,11 @@ data "aws_iam_policy_document" "bucket-policy" {
       "${aws_s3_bucket.event-storage.arn}",
       "${aws_s3_bucket.event-storage.arn}/*",
     ]
+    condition {
+      test = "ArnEquals"
+      variable = "aws:SourceArn"
+      values = ["${aws_lambda_function.event-processor.arn}"]
+    }
   }
 }
 
