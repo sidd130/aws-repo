@@ -156,7 +156,8 @@ data "aws_iam_policy_document" "bucket-policy" {
       ]
     }
     resources = [
-      aws_s3_bucket.event-storage.arn
+      "${aws_s3_bucket.event-storage.arn}",
+      "${aws_s3_bucket.event-storage.arn}/*",
     ]
   }
 }
