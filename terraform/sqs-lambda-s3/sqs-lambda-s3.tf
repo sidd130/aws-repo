@@ -138,20 +138,31 @@ resource "aws_s3_bucket" "event-storage" {
   }
 }
 
-data "aws_iam_policy_document" "bucket-policy" {
-  statement {
-    effect = "Allow"
-    actions = ["s3:PutObject"]
-    principals {
-      type = "AWS"
-      identifiers = [
-        aws_lambda_function.event-processor.arn
-      ]
-    }
-  }
-}
+# data "aws_iam_policy_document" "bucket-policy" {
+#   statement {
+#     effect = "Allow"
+#     actions = ["s3:PutObject"]
+#     principals {
+#       type = "AWS"
+#       identifiers = [
+#         aws_lambda_function.event-processor.arn
+#       ]
+#     }
+#   }
+# }
 
 resource "aws_s3_bucket_policy" "event-storage-bucket-policy" {
   bucket = aws_s3_bucket.event-storage.id
-  policy = data.aws_iam_policy_document.bucket-policy.json
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "s3:PutObject"
+        Principal = {
+          AWS = "${aws_lambda_function.event-processor.arn}"
+        }
+      }
+    ]
+  })
 }
