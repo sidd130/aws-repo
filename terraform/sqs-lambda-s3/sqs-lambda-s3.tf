@@ -155,6 +155,9 @@ data "aws_iam_policy_document" "bucket-policy" {
         "lambda.amazonaws.com"
       ]
     }
+    resources = [
+      aws_s3_bucket.event-storage.arn
+    ]
   }
 }
 
