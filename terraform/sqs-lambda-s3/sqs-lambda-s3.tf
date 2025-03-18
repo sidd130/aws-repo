@@ -141,7 +141,7 @@ resource "aws_s3_bucket" "event-storage" {
 data "aws_iam_policy_document" "bucket-policy" {
   statement {
     effect = "Allow"
-    actions = "s3:PutObject"
+    actions = ["s3:PutObject"]
     principals {
       type = "AWS"
       identifiers = [
