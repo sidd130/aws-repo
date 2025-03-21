@@ -140,6 +140,7 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
   ]
 }
 
+# S3 bucket
 resource "aws_s3_bucket" "event-storage" {
   bucket        = "event-storage-bucket-20250319"
   force_destroy = true
@@ -148,6 +149,7 @@ resource "aws_s3_bucket" "event-storage" {
   }
 }
 
+# Bucket policy document
 data "aws_iam_policy_document" "bucket-policy" {
   statement {
     effect  = "Allow"
@@ -170,6 +172,7 @@ data "aws_iam_policy_document" "bucket-policy" {
   }
 }
 
+# Bucket policy
 resource "aws_s3_bucket_policy" "event-storage-bucket-policy" {
   bucket = aws_s3_bucket.event-storage.id
   policy = data.aws_iam_policy_document.bucket-policy.json
