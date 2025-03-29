@@ -13,13 +13,20 @@ provider "aws" {
   region = "ap-south-1"
 }
 
+data "archive_file" "lambda_handler_zip_file" {
+  type        = "zip"
+  source_file = "${path.module}/handler.py"
+  output_path = "${path.module}/sqs-lambda-s3.zip"
+}
+
 # Lambda function
 resource "aws_lambda_function" "event-processor" {
-  function_name = "event-processor"
-  filename      = "sqs-lambda-s3.zip"
-  handler       = "handler.lambda_handler"
-  runtime       = "python3.12"
-  role          = aws_iam_role.event-processor-exec-role.arn
+  function_name    = "event-processor"
+  filename         = data.archive_file.lambda_handler_zip_file.output_path
+  source_code_hash = filebase64sha256(data.archive_file.lambda_handler_zip_file.output_path)
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  role             = aws_iam_role.event-processor-exec-role.arn
 }
 
 # Lambda execution role
@@ -142,7 +149,7 @@ resource "aws_sqs_queue_policy" "event-collector-policy" {
 
 # S3 bucket
 resource "aws_s3_bucket" "event-storage" {
-  bucket        = "event-storage-bucket-20250319"
+  bucket        = "my-bucket-20250329"
   force_destroy = true
   tags = {
     Name = "event-storage"
