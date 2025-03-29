@@ -14,7 +14,7 @@ def lambda_handler(event, context):
     s3_client = boto3.client('s3',config=config)
     resp = s3_client.put_object(
         Body=str(request_body).encode(encoding="utf-8"),
-        Bucket='event-storage-bucket-20250319',
+        Bucket='my-bucket-20250329',
         Key=file_name
     )
     
