@@ -4,6 +4,6 @@ import os
 
 
 def lambda_handler(event, context):
-    print(json.loads(event)['Records'])
+    print(json.loads(event['Records']))
     print(os.getenv('AWS_REGION'))
     print(os.getenv('S3_BUCKET_NAME'))
