@@ -111,15 +111,15 @@ resource "aws_iam_policy" "pic-reader-policy" {
           aws_lambda_function.pic-reader.arn
         ]
       },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject"
-        ]
-        Resource = [
-            aws_s3_bucket.pic-storage.arn
-        ]
-      },
+    #   {
+    #     Effect = "Allow"
+    #     Action = [
+    #       "s3:GetObject"
+    #     ]
+    #     Resource = [
+    #         aws_s3_bucket.pic-storage.arn
+    #     ]
+    #   },
       {
         Effect = "Allow"
         Action = [
@@ -141,9 +141,20 @@ resource "aws_iam_role_policy_attachment" "pic-reader-exec-role-policy" {
   role = aws_iam_role.pic-reader-exec-role.name
 }
 
-# Event source mapping
-resource "aws_lambda_event_source_mapping" "s3-lambda-linker" {
-  function_name = aws_lambda_function.pic-reader.arn
-  event_source_arn = aws_s3_bucket.pic-storage.arn
-  enabled = true
+# S3 event notification to Lambda function
+resource "aws_s3_bucket_notification" "pic-storage-notif" {
+  bucket = aws_s3_bucket.pic-storage.id
+  lambda_function {
+    events = [
+        "s3:ObjectCreated:*"
+    ]
+    lambda_function_arn = aws_lambda_function.pic-reader.arn
+  }
+}
+
+resource "aws_lambda_permission" "pic-reader-permissions" {
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.pic-reader.function_name
+  principal = "s3.amazonaws.com"
+  source_arn = aws_s3_bucket.pic-storage.arn
 }
