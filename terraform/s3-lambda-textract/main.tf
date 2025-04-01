@@ -43,7 +43,7 @@ data "aws_iam_policy_document" "bucket-policy" {
       test     = "ArnEquals"
       variable = "aws:SourceArn"
       values = [
-        ""
+        "${aws_lambda_function.pic-reader.arn}"
       ]
     }
   }
@@ -140,4 +140,11 @@ resource "aws_iam_policy" "pic-reader-policy" {
 resource "aws_iam_role_policy_attachment" "pic-reader-exec-role-policy" {
   policy_arn = aws_iam_policy.pic-reader-policy.arn
   role = aws_iam_role.pic-reader-exec-role.name
+}
+
+# Event source mapping
+resource "aws_lambda_event_source_mapping" "s3-lambda-linker" {
+  function_name = aws_lambda_function.pic-reader.arn
+  event_source_arn = aws_s3_bucket.pic-storage.arn
+  enabled = true
 }
