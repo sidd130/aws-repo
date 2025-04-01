@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = var.aws_region_name
 }
 
 # S3 bucket
@@ -72,7 +72,7 @@ resource "aws_lambda_function" "pic-reader" {
   role             = aws_iam_role.pic-reader-exec-role.arn
   environment {
     variables = {
-        AWS_REGION = var.aws_region
+        AWS_REGION = var.aws_region_name
         S3_BUCKET_NAME = var.s3_bucket_name
     }
   }
