@@ -111,15 +111,15 @@ resource "aws_iam_policy" "pic-reader-policy" {
           aws_lambda_function.pic-reader.arn
         ]
       },
-    #   {
-    #     Effect = "Allow"
-    #     Action = [
-    #       "s3:GetObject"
-    #     ]
-    #     Resource = [
-    #         aws_s3_bucket.pic-storage.arn
-    #     ]
-    #   },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = [
+            aws_s3_bucket.pic-storage.arn
+        ]
+      },
       {
         Effect = "Allow"
         Action = [
