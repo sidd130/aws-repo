@@ -9,3 +9,9 @@ variable "iam_role_name" {
   type = string
   default = "new-lambda-role"
 }
+
+variable "region" {
+  description = "AWS region"
+  type = string
+  default = "ap-south-1"
+}

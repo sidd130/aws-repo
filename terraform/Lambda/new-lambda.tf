@@ -9,6 +9,10 @@ terraform {
   required_version = ">=1.2.0"
 }
 
+provider "aws" {
+  region = var.region
+}
+
 resource "aws_iam_role" "new-lambda-role" {
   name               = var.iam_role_name
   assume_role_policy = <<EOF
