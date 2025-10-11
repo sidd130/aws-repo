@@ -63,12 +63,63 @@ resource "aws_launch_template" "jenkins" {
   )
 }
 
+# Create Application Load Balancer
+resource "aws_lb" "jenkins" {
+  name               = "jenkins-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [var.alb_security_group_id]
+  subnets            = var.public_subnets
+
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "jenkins-alb"
+  }
+}
+
+# Create ALB target group
+resource "aws_lb_target_group" "jenkins" {
+  name     = "jenkins-target-group"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 15
+    matcher            = "200,403"  # Jenkins returns 403 when not authenticated
+    path               = "/login"
+    port               = "traffic-port"
+    timeout            = 5
+    unhealthy_threshold = 2
+  }
+
+  tags = {
+    Name = "jenkins-target-group"
+  }
+}
+
+# Create ALB listener
+resource "aws_lb_listener" "jenkins" {
+  load_balancer_arn = aws_lb.jenkins.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.jenkins.arn
+  }
+}
+
+# Create Auto Scaling Group
 resource "aws_autoscaling_group" "jenkins" {
   name                = "jenkins-asg"
   desired_capacity    = var.desired_capacity
   max_size           = var.max_size
   min_size           = var.min_size
-  target_group_arns  = []
+  target_group_arns  = [aws_lb_target_group.jenkins.arn]
   vpc_zone_identifier = [var.subnet_id]
 
   launch_template {
@@ -87,19 +138,19 @@ resource "aws_autoscaling_group" "jenkins" {
   }
 }
 
+# Create Elastic IP for ALB
 resource "aws_eip" "jenkins" {
-  vpc = true
   tags = {
     Name = "jenkins-host-t3"
   }
 }
 
-resource "aws_autoscaling_attachment" "eip" {
-  depends_on = [aws_autoscaling_group.jenkins]
-  
-  autoscaling_group_name = aws_autoscaling_group.jenkins.name
-  
-  lifecycle {
-    create_before_destroy = true
+# Associate EIP with ALB using a NAT Gateway
+resource "aws_nat_gateway" "jenkins" {
+  allocation_id = aws_eip.jenkins.id
+  subnet_id     = var.subnet_id
+
+  tags = {
+    Name = "jenkins-nat-gateway"
   }
 }

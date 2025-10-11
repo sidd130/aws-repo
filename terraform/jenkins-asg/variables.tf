@@ -55,6 +55,16 @@ variable "security_group_id" {
   type        = string
 }
 
+variable "alb_security_group_id" {
+  description = "ID of the security group for ALB"
+  type        = string
+}
+
+variable "public_subnets" {
+  description = "List of public subnet IDs for ALB"
+  type        = list(string)
+}
+
 variable "key_name" {
   description = "Name of the SSH key pair to use for the EC2 instance"
   type        = string
