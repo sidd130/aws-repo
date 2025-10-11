@@ -88,7 +88,7 @@ resource "aws_autoscaling_group" "jenkins" {
 }
 
 resource "aws_eip" "jenkins" {
-  domain = "vpc"
+  vpc = true
   tags = {
     Name = "jenkins-host-t3"
   }
