@@ -69,7 +69,7 @@ resource "aws_lb" "jenkins" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [var.alb_security_group_id]
-  subnets            = var.public_subnets
+  subnets            = var.public_subnet_ids
 
   enable_deletion_protection = false
 
@@ -120,7 +120,7 @@ resource "aws_autoscaling_group" "jenkins" {
   max_size           = var.max_size
   min_size           = var.min_size
   target_group_arns  = [aws_lb_target_group.jenkins.arn]
-  vpc_zone_identifier = [var.subnet_id]
+  vpc_zone_identifier = [var.private_subnet_id]
 
   launch_template {
     id      = aws_launch_template.jenkins.id
@@ -148,7 +148,7 @@ resource "aws_eip" "jenkins" {
 # Associate EIP with ALB using a NAT Gateway
 resource "aws_nat_gateway" "jenkins" {
   allocation_id = aws_eip.jenkins.id
-  subnet_id     = var.subnet_id
+  subnet_id     = var.public_subnet_ids[0]
 
   tags = {
     Name = "jenkins-nat-gateway"

@@ -55,3 +55,17 @@ Terraform is returning the following errors:
 Evaluate the errors and perform the necessary changes. Prompt me whenever certain inputs are required.
 
 If that is the case, then is it possible to retain the ASG, then create an ALB and attach the elastic IP to the ALB instead?
+
+Analyze the following error and suggest a fix for it:
+
+```
+╷
+│ Error: creating ELBv2 application Load Balancer (jenkins-alb): ValidationError: At least two subnets in two different Availability Zones must be specified
+│ 	status code: 400, request id: d1ebf33b-521d-4ed1-a79f-9d74216a0805
+│ 
+│   with aws_lb.jenkins,
+│   on main.tf line 67, in resource "aws_lb" "jenkins":
+│   67: resource "aws_lb" "jenkins" {
+│ 
+╵
+```
