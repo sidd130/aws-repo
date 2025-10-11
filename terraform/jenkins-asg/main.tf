@@ -53,6 +53,11 @@ resource "aws_launch_template" "jenkins" {
                 firewall-cmd --permanent --zone=public --add-service=http
                 firewall-cmd --reload
               fi
+
+              # Install Terraform
+              yum install -y yum-utils
+              yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+              yum -y install terraform
               EOF
   )
 }
