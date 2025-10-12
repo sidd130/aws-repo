@@ -20,7 +20,7 @@ resource "aws_instance" "jenkins" {
 
               # Install required dependencies
               echo "Installing dependencies..."
-              yum install -y fontconfig
+              yum install -y fontconfig wget
 
               # Install Java 21
               echo "Installing Java 21..."
