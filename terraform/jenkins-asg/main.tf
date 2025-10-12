@@ -58,6 +58,14 @@ resource "aws_instance" "jenkins" {
                 firewall-cmd --reload
               fi
 
+              # Configure HTTPS for Jenkins
+              echo "Configuring HTTPS for Jenkins..."
+              sudo openssl req -newkey rsa:2048 -nodes -keyout jenkins.key -x509 -days 365 -out jenkins.crt
+              mv jenkins.crt /etc/ssl/jenkins/
+              mv jenkins.key /etc/ssl/jenkins/
+              echo "JENKINS_ARGS="--httpPort=-1 --httpsPort=8443 --httpsCertificate=/etc/ssl/jenkins/jenkins.crt --httpsPrivateKey=/etc/ssl/jenkins/jenkins.key" >> /etc/sysconfig/jenkins
+              systemctl restart jenkins
+
               # Install Terraform
               echo "Installing Terraform..."
               yum install -y yum-utils
