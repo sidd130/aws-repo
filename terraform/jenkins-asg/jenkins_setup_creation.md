@@ -89,3 +89,11 @@ Analyze the following error and suggest a fix for it:
 ---
 
 Convert the configuration to host the EC2 in the public subnet, associate the EIP with the EC2, and remove the ALB and ASG definitions. Also remove any private subnet definitions and references if not required.
+
+---
+
+Convert the user data such that it is saved in a shell script, then executed while directing the output to /var/log/user-data-log.txt. Also, use set -x in the beginning and set +x in the end of the user data script.
+
+---
+
+EIP is existing, so make changes in the configuration such that the EIP is referenced from vars and associated with the EC2, during creation of resources. And while destroying resources, EIP isn't dropped but rather just dissociated.

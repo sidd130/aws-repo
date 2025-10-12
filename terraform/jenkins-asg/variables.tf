@@ -36,3 +36,8 @@ variable "key_name" {
   description = "Name of the SSH key pair to use for the EC2 instance"
   type        = string
 }
+
+variable "eip_id" {
+  description = "ID of the existing Elastic IP to associate with the EC2 instance"
+  type        = string
+}

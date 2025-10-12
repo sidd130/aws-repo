@@ -74,10 +74,17 @@ resource "aws_instance" "jenkins" {
   }
 }
 
-# Create Elastic IP
-resource "aws_eip" "jenkins" {
-  instance = aws_instance.jenkins.id
-  tags = {
-    Name = "jenkins-host-t3"
+# Data source for existing EIP
+data "aws_eip" "jenkins" {
+  id = var.eip_id
+}
+
+# Associate existing EIP with EC2 instance
+resource "aws_eip_association" "jenkins" {
+  instance_id   = aws_instance.jenkins.id
+  allocation_id = data.aws_eip.jenkins.id
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
