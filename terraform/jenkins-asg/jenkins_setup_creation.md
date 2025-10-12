@@ -5,21 +5,33 @@ You are an expert in IaC and AWS. You have the following tasks to be performed:
     * Use the region **ap-south-1** for creating the resources.
     * An elastic IP **jenkins-host-t3** needs to be attached to the EC2.
 
+---
+
 VPC, subnet, internet gateway, route table and route table association are already existing. Repeat the previous steps, but this time, prompt for the names/IDs of existing resources wherever required for the creation of the ASG. Also move the new directory and files to repo **aws-repo**.
+
+---
 
 Now update the userdata of the EC2 referring the website <a href="https://www.jenkins.io/doc/book/installing/linux/">Jenkins setup</a> so that the following tasks are accomplished:
 * Refer to the section **Red Hat Enterprise Linux and derivatives** and use the steps in **Long Term Support release**
 * Figure out and include the JVM configuration for implementing **G1 garbage collection**, such that Jenkins doesn't crash on the EC2.
 
+---
+
 Security group is also existing, so move it to .tfvars file and update main.tf to use the existing security group.
+
+---
 
 Add a key pair in the launch template, and source its value from the variables file.
 
+---
+
 Refactor the terraform config for version 1.11.4
+
+---
 
 Terraform is returning the following errors:
 
-╵<code>
+```
 + terraform validate
 ╷
 │ Error: Invalid combination of arguments
@@ -50,11 +62,15 @@ Terraform is returning the following errors:
 │ 
 │ "elb": one of `alb_target_group_arn,elb,lb_target_group_arn` must be
 │ specified
-╵</code>
+```
 
 Evaluate the errors and perform the necessary changes. Prompt me whenever certain inputs are required.
 
+---
+
 If that is the case, then is it possible to retain the ASG, then create an ALB and attach the elastic IP to the ALB instead?
+
+---
 
 Analyze the following error and suggest a fix for it:
 
@@ -69,3 +85,7 @@ Analyze the following error and suggest a fix for it:
 │ 
 ╵
 ```
+
+---
+
+Convert the configuration to host the EC2 in the public subnet, associate the EIP with the EC2, and remove the ALB and ASG definitions. Also remove any private subnet definitions and references if not required.

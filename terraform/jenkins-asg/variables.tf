@@ -11,27 +11,9 @@ variable "instance_type" {
 }
 
 variable "ami_id" {
-  description = "AMI ID for the launch configuration"
+  description = "AMI ID for the EC2 instance"
   type        = string
   default     = "ami-0402e56c0a7afb78f"
-}
-
-variable "min_size" {
-  description = "Minimum size of the ASG"
-  type        = number
-  default     = 1
-}
-
-variable "max_size" {
-  description = "Maximum size of the ASG"
-  type        = number
-  default     = 1
-}
-
-variable "desired_capacity" {
-  description = "Desired capacity of the ASG"
-  type        = number
-  default     = 1
 }
 
 # Variables for existing resources
@@ -40,34 +22,14 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "public_subnet_ids" {
-  description = "List of public subnet IDs in different AZs for ALB"
-  type        = list(string)
-}
-
-variable "private_subnet_id" {
-  description = "ID of the private subnet for EC2 instances"
-  type        = string
-}
-
-variable "existing_route_table_id" {
-  description = "ID of the existing route table"
+variable "subnet_id" {
+  description = "ID of the public subnet"
   type        = string
 }
 
 variable "security_group_id" {
   description = "ID of the existing security group"
   type        = string
-}
-
-variable "alb_security_group_id" {
-  description = "ID of the security group for ALB"
-  type        = string
-}
-
-variable "public_subnets" {
-  description = "List of public subnet IDs for ALB"
-  type        = list(string)
 }
 
 variable "key_name" {
