@@ -38,13 +38,10 @@ resource "aws_instance" "jenkins" {
               cat << 'JENKINS_CONFIG' > /etc/systemd/system/jenkins.service.d/override.conf
               [Service]
               Environment="JAVA_OPTS=-Xmx2048m -XX:+UseG1GC -XX:+ExplicitGCInvokesConcurrent -XX:+ParallelRefProcEnabled -XX:+UseStringDeduplication -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:+UnlockDiagnosticVMOptions -XX:G1HeapRegionSize=8m -XX:MetaspaceSize=512m -XX:InitiatingHeapOccupancyPercent=45"
+              Environment="JENKINS_HTTPS_PORT=8443"
+              Environment="JENKINS_HTTPS_KEYSTORE=/etc/ssl/jenkins/jenkins.p12"
+              Environment="JENKINS_HTTPS_KEYSTORE_PASSWORD=string123"
               JENKINS_CONFIG
-
-              # Reload systemd and start Jenkins
-              echo "Starting Jenkins service..."
-              systemctl daemon-reload
-              systemctl enable jenkins
-              systemctl start jenkins
 
               # Configure firewall if it's running
               echo "Configuring firewall rules..."
@@ -60,11 +57,17 @@ resource "aws_instance" "jenkins" {
 
               # Configure HTTPS for Jenkins
               echo "Configuring HTTPS for Jenkins..."
-              sudo openssl req -newkey rsa:2048 -nodes -keyout jenkins.key -x509 -days 365 -out jenkins.crt
-              mv jenkins.crt /etc/ssl/jenkins/
-              mv jenkins.key /etc/ssl/jenkins/
-              echo "JENKINS_ARGS="--httpPort=-1 --httpsPort=8443 --httpsCertificate=/etc/ssl/jenkins/jenkins.crt --httpsPrivateKey=/etc/ssl/jenkins/jenkins.key" >> /etc/sysconfig/jenkins
-              systemctl restart jenkins
+              openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out jenkins.pem -subj "/C=IN/ST=Karnataka/L=Bengaluru/O=NA/OU=NA/CN=NA" -batch
+              openssl pkcs12 -inkey key.pem -in jenkins.pem -export -out jenkins.p12 -name jenkins -passout pass:string123
+              mkdir -p /etc/ssl/jenkins/
+              mv jenkins.p12 /etc/ssl/jenkins/
+              chmod uga+rx /etc/ssl/jenkins/jenkins.p12
+              
+              # Reload systemd and start Jenkins
+              echo "Starting Jenkins service..."
+              systemctl daemon-reload
+              systemctl enable jenkins
+              systemctl start jenkins
 
               # Install Terraform
               echo "Installing Terraform..."
