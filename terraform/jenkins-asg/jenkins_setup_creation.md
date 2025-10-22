@@ -97,3 +97,13 @@ Convert the user data such that it is saved in a shell script, then executed whi
 ---
 
 EIP is existing, so make changes in the configuration such that the EIP is referenced from vars and associated with the EC2, during creation of resources. And while destroying resources, EIP isn't dropped but rather just dissociated.
+
+---
+
+Update the user data to export an env var JENKINS_HOME with value `/var/lib/jenkins`, such that it persists even after user data init completion.
+
+---
+
+While the lastest changes look good, there are 2 follow-up changes required:
+- The env var setup should be moved between `HTTPS config for jenkins` and `jenkins startup`.
+- `wget` installation got removed, so it needs to be added back in the dependency installation. Else subsequent steps will fail.

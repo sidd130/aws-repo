@@ -38,6 +38,7 @@ resource "aws_instance" "jenkins" {
               cat << 'JENKINS_CONFIG' > /etc/systemd/system/jenkins.service.d/override.conf
               [Service]
               Environment="JAVA_OPTS=-Xmx2048m -XX:+UseG1GC -XX:+ExplicitGCInvokesConcurrent -XX:+ParallelRefProcEnabled -XX:+UseStringDeduplication -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:+UnlockDiagnosticVMOptions -XX:G1HeapRegionSize=8m -XX:MetaspaceSize=512m -XX:InitiatingHeapOccupancyPercent=45"
+              Environment="JENKINS_HOME=/var/lib/jenkins"
               Environment="JENKINS_HTTPS_PORT=8443"
               Environment="JENKINS_HTTPS_KEYSTORE=/etc/ssl/jenkins/jenkins.p12"
               Environment="JENKINS_HTTPS_KEYSTORE_PASSWORD=string123"
@@ -62,6 +63,12 @@ resource "aws_instance" "jenkins" {
               mkdir -p /etc/ssl/jenkins/
               mv jenkins.p12 /etc/ssl/jenkins/
               chmod uga+rx /etc/ssl/jenkins/jenkins.p12
+              
+              # Set up Jenkins environment variable
+              echo "Setting up JENKINS_HOME environment variable..."
+              echo 'export JENKINS_HOME=/var/lib/jenkins' > /etc/profile.d/jenkins_home.sh
+              chmod +x /etc/profile.d/jenkins_home.sh
+              source /etc/profile.d/jenkins_home.sh
               
               # Reload systemd and start Jenkins
               echo "Starting Jenkins service..."
