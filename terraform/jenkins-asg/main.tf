@@ -117,12 +117,14 @@ resource "aws_instance" "jenkins" {
 
               # Fetch SSM parameters
               echo "Fetching SSM parameters..."
+              set +x
               export JENKINS_KEYSTORE_PWD=$(aws ssm get-parameter \
                 --name "/jenkins/https-keystore-pwd" \
                 --with-decryption \
                 --region ${var.aws_region} \
                 --query "Parameter.Value" \
                 --output text)
+              set -x
 
               export JENKINS_BACKUP_BUCKET=$(aws ssm get-parameter \
                 --name "/jenkins/s3-bucket-name" \
@@ -168,7 +170,9 @@ resource "aws_instance" "jenkins" {
               # Configure HTTPS for Jenkins
               echo "Configuring HTTPS for Jenkins..."
               openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out jenkins.pem -subj "/C=IN/ST=Karnataka/L=Bengaluru/O=NA/OU=NA/CN=NA" -batch
+              set +x
               openssl pkcs12 -inkey key.pem -in jenkins.pem -export -out jenkins.p12 -name jenkins -passout pass:$JENKINS_KEYSTORE_PWD
+              set -x
               mkdir -p /etc/ssl/jenkins/
               mv jenkins.p12 /etc/ssl/jenkins/
               chmod uga+rx /etc/ssl/jenkins/jenkins.p12

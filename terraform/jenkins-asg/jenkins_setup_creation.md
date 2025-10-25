@@ -126,3 +126,11 @@ Perform the following steps in the user data script:
 - Using **aws CLI**, retrieve the value of the SSM parameters `arn:aws:ssm:ap-south-1:438801865484:parameter/jenkins/https-keystore-pwd` and `arn:aws:ssm:ap-south-1:438801865484:parameter/jenkins/s3-bucket-name`. Both parameters are encrypted, so use the KMS key alias `arn:aws:kms:ap-south-1:438801865484:alias/jenkins-sym-key` for decrypting the parameters. The retrieved values should be exported as env vars.
 - The env var for parameter `/jenkins/https-keystore-pwd` should be referenced wherever applicable in the the user data script.
 - Env vars should be unset towards the end of the script.
+
+---
+
+Ensure that the EC2 execution role is not dropped during the terraform destroy operation, and is updated during its creation
+
+---
+
+Encapsulate commands in the user data with `set +x` and `set -x`, where the commands are using the env var `JENKINS_KEYSTORE_PWD`, except while unsetting the env var.
