@@ -180,7 +180,7 @@ data "aws_kms_key" "kms_key" {
 
 resource "aws_kms_key_policy" "kms_key_policy" {
   key_id = data.aws_kms_key.kms_key.id
-  policy = data.aws_iam_policy_document.kms_key_policy.json
+  policy = data.aws_iam_policy_document.jenkins_kms_policy.json
 }
 
 # Create EC2 instance
