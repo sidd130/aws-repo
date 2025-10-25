@@ -360,7 +360,7 @@ resource "aws_lambda_function" "eip_manager" {
   function_name = "jenkins-eip-manager"
   role         = aws_iam_role.lambda_role.arn
   handler      = "eip_manager.handler"
-  runtime      = "python3.12"
+  runtime      = "python3.10"
 
   environment {
     variables = {
