@@ -309,7 +309,7 @@ resource "aws_instance" "jenkins" {
   tags = {
     Name = "jenkins-server"
   }
-  depends_on = [ data.aws_kms_key.kms_key, data.aws_kms_key_policy.kms_key_policy ]
+  depends_on = [ data.aws_kms_key.kms_key, resource.aws_kms_key_policy.kms_key_policy ]
 }
 
 # Data source for existing EIP
