@@ -183,15 +183,23 @@ resource "aws_kms_key_policy" "kms_key_policy" {
   policy = data.aws_iam_policy_document.jenkins_kms_policy.json
 }
 
-# Create EC2 instance
-resource "aws_instance" "jenkins" {
-  ami                  = var.ami_id
-  instance_type        = var.instance_type
-  subnet_id            = var.subnet_id
-  key_name             = var.key_name
-  iam_instance_profile = aws_iam_instance_profile.jenkins_profile.name
+# Create launch template
+resource "aws_launch_template" "jenkins" {
+  name_prefix   = "jenkins-template"
+  image_id      = var.ami_id
+  instance_type = var.instance_type
 
-  vpc_security_group_ids = [var.security_group_id]
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups            = [var.security_group_id]
+    subnet_id                  = var.subnet_id
+  }
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.jenkins_profile.name
+  }
+
+  key_name = var.key_name
 
   user_data = base64encode(<<-EOF
               #!/bin/bash
@@ -309,7 +317,36 @@ resource "aws_instance" "jenkins" {
   tags = {
     Name = "jenkins-server"
   }
-  depends_on = [ data.aws_kms_key.kms_key, resource.aws_kms_key_policy.kms_key_policy ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Create Auto Scaling Group
+resource "aws_autoscaling_group" "jenkins" {
+  name                = "jenkins-asg"
+  desired_capacity    = var.asg_desired_capacity
+  max_size            = var.asg_max_size
+  min_size            = var.asg_min_size
+  vpc_zone_identifier = [var.subnet_id]
+
+  launch_template {
+    id      = aws_launch_template.jenkins.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value              = "jenkins-server"
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  depends_on = [data.aws_kms_key.kms_key, resource.aws_kms_key_policy.kms_key_policy]
 }
 
 # Data source for existing EIP
@@ -317,12 +354,147 @@ data "aws_eip" "jenkins" {
   id = var.eip_id
 }
 
-# Associate existing EIP with EC2 instance
-resource "aws_eip_association" "jenkins" {
-  instance_id   = aws_instance.jenkins.id
-  allocation_id = data.aws_eip.jenkins.id
+# Lambda function to manage EIP association
+resource "aws_lambda_function" "eip_manager" {
+  filename      = "${path.module}/eip_manager.zip"
+  function_name = "jenkins-eip-manager"
+  role         = aws_iam_role.lambda_role.arn
+  handler      = "eip_manager.handler"
+  runtime      = "python3.12"
 
-  lifecycle {
-    create_before_destroy = true
+  environment {
+    variables = {
+      EIP_ALLOCATION_ID = data.aws_eip.jenkins.id
+    }
   }
+}
+
+# Lambda IAM role
+resource "aws_iam_role" "lambda_role" {
+  name = "jenkins-eip-manager-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Lambda IAM policy
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "jenkins-eip-manager-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeInstances",
+          "ec2:AssociateAddress",
+          "ec2:DisassociateAddress"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Create SNS Topic
+resource "aws_sns_topic" "jenkins_asg" {
+  name = "jenkins-asg-lifecycle"
+}
+
+# SNS Topic Policy
+resource "aws_sns_topic_policy" "jenkins_asg" {
+  arn = aws_sns_topic.jenkins_asg.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowASGPublish"
+        Effect = "Allow"
+        Principal = {
+          Service = "autoscaling.amazonaws.com"
+        }
+        Action   = "sns:Publish"
+        Resource = aws_sns_topic.jenkins_asg.arn
+      }
+    ]
+  })
+}
+
+# Lambda permission to allow SNS to invoke function
+resource "aws_lambda_permission" "with_sns" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.eip_manager.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.jenkins_asg.arn
+}
+
+# SNS Topic Subscription
+resource "aws_sns_topic_subscription" "lambda" {
+  topic_arn = aws_sns_topic.jenkins_asg.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.eip_manager.arn
+}
+
+# ASG lifecycle hook
+resource "aws_autoscaling_lifecycle_hook" "jenkins" {
+  name                   = "jenkins-lifecycle-hook"
+  autoscaling_group_name = aws_autoscaling_group.jenkins.name
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
+  default_result        = "CONTINUE"
+  heartbeat_timeout     = 300
+  notification_target_arn = aws_sns_topic.jenkins_asg.arn
+  role_arn              = aws_iam_role.asg_notification_role.arn
+}
+
+# ASG notification role
+resource "aws_iam_role" "asg_notification_role" {
+  name = "jenkins-asg-notification-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "autoscaling.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# ASG notification role policy
+resource "aws_iam_role_policy" "asg_notification_policy" {
+  name = "jenkins-asg-notification-policy"
+  role = aws_iam_role.asg_notification_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = [
+          aws_sns_topic.jenkins_asg.arn
+        ]
+      }
+    ]
+  })
 }

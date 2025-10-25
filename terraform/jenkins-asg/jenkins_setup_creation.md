@@ -134,3 +134,12 @@ Ensure that the EC2 execution role is not dropped during the terraform destroy o
 ---
 
 Encapsulate commands in the user data with `set +x` and `set -x`, where the commands are using the env var `JENKINS_KEYSTORE_PWD`, except while unsetting the env var.
+
+---
+
+Analyze the directory `terraform/jenkins-asg` in the repo `aws-repo` and perform the following tasks:
+- Instead of creating just the EC2 instance, create an ASG having min,max,desired as 1,1,1. The launch template should have the same configuration as the present EC2 instance, and the EC2 should continue to be spun up in the private subnet.
+
+---
+
+The ASG lifecycle hook cannot directly trigger a Lambda. Refer to <a href=https://docs.aws.amazon.com/autoscaling/ec2/userguide/tutorial-lifecycle-hook-lambda.html>lifecycle hook tutorial</a>. and make additional changes.
