@@ -73,7 +73,7 @@ resource "aws_iam_instance_profile" "jenkins_profile" {
 }
 
 data "aws_kms_key" "kms_key" {
-  key_id = "jenkins-sym-key"
+  key_id = "alias/jenkins-sym-key"
 }
 
 data "aws_kms_key_policy" "kms_key_policy" {
