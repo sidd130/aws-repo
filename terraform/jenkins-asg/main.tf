@@ -14,6 +14,11 @@ resource "aws_iam_role" "jenkins_role" {
       }
     ]
   })
+
+  lifecycle {
+    prevent_destroy = true
+    create_before_destroy = true
+  }
 }
 
 # Create IAM policy for S3 access
@@ -70,6 +75,11 @@ resource "aws_iam_role_policy" "jenkins_ssm_policy" {
 resource "aws_iam_instance_profile" "jenkins_profile" {
   name = "jenkins-instance-profile"
   role = aws_iam_role.jenkins_role.name
+
+  lifecycle {
+    prevent_destroy = true
+    create_before_destroy = true
+  }
 }
 
 # Create EC2 instance
