@@ -14,11 +14,6 @@ resource "aws_iam_role" "jenkins_role" {
       }
     ]
   })
-
-  lifecycle {
-    prevent_destroy = true
-    create_before_destroy = true
-  }
 }
 
 # Create IAM policy for S3 access
@@ -75,19 +70,23 @@ resource "aws_iam_role_policy" "jenkins_ssm_policy" {
 resource "aws_iam_instance_profile" "jenkins_profile" {
   name = "jenkins-instance-profile"
   role = aws_iam_role.jenkins_role.name
+}
 
-  lifecycle {
-    prevent_destroy = true
-    create_before_destroy = true
-  }
+data "aws_kms_key" "kms_key" {
+  key_id = "jenkins-sym-key"
+}
+
+data "aws_kms_key_policy" "kms_key_policy" {
+  key_id = data.aws_kms_key.kms_key.id
+  policy = data.aws_iam_policy_document.kms_key_policy.json
 }
 
 # Create EC2 instance
 resource "aws_instance" "jenkins" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  subnet_id     = var.subnet_id
-  key_name      = var.key_name
+  ami                  = var.ami_id
+  instance_type        = var.instance_type
+  subnet_id            = var.subnet_id
+  key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.jenkins_profile.name
 
   vpc_security_group_ids = [var.security_group_id]
@@ -208,6 +207,7 @@ resource "aws_instance" "jenkins" {
   tags = {
     Name = "jenkins-server"
   }
+  depends_on = [ data.aws_kms_key.kms_key, data.aws_kms_key_policy.kms_key_policy ]
 }
 
 # Data source for existing EIP
