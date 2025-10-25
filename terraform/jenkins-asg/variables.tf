@@ -4,6 +4,11 @@ variable "aws_region" {
   default     = "ap-south-1"
 }
 
+variable "account_id" {
+  description = "AWS Account ID"
+  type        = string
+}
+
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string

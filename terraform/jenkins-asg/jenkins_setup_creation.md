@@ -107,3 +107,22 @@ Update the user data to export an env var JENKINS_HOME with value `/var/lib/jenk
 While the lastest changes look good, there are 2 follow-up changes required:
 - The env var setup should be moved between `HTTPS config for jenkins` and `jenkins startup`.
 - `wget` installation got removed, so it needs to be added back in the dependency installation. Else subsequent steps will fail.
+
+---
+
+Create an EC2 instance profile which has the following permissions:
+- GetObject, PutObject on all S3 buckets in the account.
+- Read parameters from SSM parameter store.
+
+Then attach the instance profile to the EC2
+
+---
+
+Replace the region and account number hardcoded valued in the ssm poilicy with variables
+
+---
+
+Perform the following steps in the user data script:
+- Using **aws CLI**, retrieve the value of the SSM parameters `arn:aws:ssm:ap-south-1:438801865484:parameter/jenkins/https-keystore-pwd` and `arn:aws:ssm:ap-south-1:438801865484:parameter/jenkins/s3-bucket-name`. Both parameters are encrypted, so use the KMS key alias `arn:aws:kms:ap-south-1:438801865484:alias/jenkins-sym-key` for decrypting the parameters. The retrieved values should be exported as env vars.
+- The env var for parameter `/jenkins/https-keystore-pwd` should be referenced wherever applicable in the the user data script.
+- Env vars should be unset towards the end of the script.
