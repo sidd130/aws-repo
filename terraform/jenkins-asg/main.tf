@@ -76,7 +76,7 @@ data "aws_kms_key" "kms_key" {
   key_id = "alias/jenkins-sym-key"
 }
 
-data "aws_kms_key_policy" "kms_key_policy" {
+resource "aws_kms_key_policy" "kms_key_policy" {
   key_id = data.aws_kms_key.kms_key.id
   policy = data.aws_iam_policy_document.kms_key_policy.json
 }
