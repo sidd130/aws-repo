@@ -143,3 +143,27 @@ Analyze the directory `terraform/jenkins-asg` in the repo `aws-repo` and perform
 ---
 
 The ASG lifecycle hook cannot directly trigger a Lambda. Refer to <a href=https://docs.aws.amazon.com/autoscaling/ec2/userguide/tutorial-lifecycle-hook-lambda.html>lifecycle hook tutorial</a>. and make additional changes.
+
+---
+
+The handler needs to complete the lifecycle action to let the ASG know that it can continue with the EC2 launch. Read through <a href="https://docs.aws.amazon.com/autoscaling/ec2/userguide/completing-lifecycle-hooks.html">Completing lifecycle hook</a> and modify the handler accordingly.
+
+---
+
+`complete_lifecycle_action` also requires instance id, so modify the handler accordingly
+
+---
+
+Convert the `Resource` value to a generic ARN for any ASG in current account and region, sourcing these values from vars.
+
+---
+
+The ASG should be configured in way that min, max and desired capacity is set to zero on creation
+
+---
+
+Update lambda policy to give permissions to create new log group, create new log stream and put log events.. This will enable the Lambda function to interface with CloudWatch.
+
+---
+
+Summarize all the changes done since the last commit for formulating a commit comment and push to remote

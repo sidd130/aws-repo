@@ -50,17 +50,17 @@ variable "eip_id" {
 variable "asg_desired_capacity" {
   description = "The desired capacity of the ASG"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "asg_min_size" {
   description = "The minimum size of the ASG"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "asg_max_size" {
   description = "The maximum size of the ASG"
   type        = number
-  default     = 1
+  default     = 0
 }
