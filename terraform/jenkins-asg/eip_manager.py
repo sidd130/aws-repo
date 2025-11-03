@@ -18,6 +18,7 @@ def handler(event, context):
     try:
         # Parse the SNS message from ASG
         message = json.loads(event['Records'][0]['Sns']['Message'])
+        print(message)
         instance_id = message['EC2InstanceId']
         
         # Extract lifecycle information
