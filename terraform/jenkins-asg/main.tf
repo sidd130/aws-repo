@@ -331,13 +331,6 @@ resource "aws_autoscaling_group" "jenkins" {
   min_size            = var.asg_min_size
   vpc_zone_identifier = [var.subnet_id]
 
-  # Force new ASG to have 0 capacity during creation
-  initial_lifecycle_hook {
-    name                 = "initial-zero-capacity"
-    lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
-    default_result      = "ABANDON"
-  }
-
   launch_template {
     id      = aws_launch_template.jenkins.id
     version = "$Latest"
