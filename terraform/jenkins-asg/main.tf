@@ -261,7 +261,7 @@ resource "aws_launch_template" "jenkins" {
               Environment="JENKINS_HOME=/var/lib/jenkins"
               Environment="JENKINS_HTTPS_PORT=8443"
               Environment="JENKINS_HTTPS_KEYSTORE=/etc/ssl/jenkins/jenkins.p12"
-              Environment="JENKINS_HTTPS_KEYSTORE_PASSWORD=$JENKINS_KEYSTORE_PWD"
+              Environment="JENKINS_HTTPS_KEYSTORE_PASSWORD=${JENKINS_KEYSTORE_PWD}"
               JENKINS_CONFIG
 
               # Configure firewall if it's running
@@ -280,7 +280,7 @@ resource "aws_launch_template" "jenkins" {
               echo "Configuring HTTPS for Jenkins..."
               openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out jenkins.pem -subj "/C=IN/ST=Karnataka/L=Bengaluru/O=NA/OU=NA/CN=NA" -batch
               set +x
-              openssl pkcs12 -inkey key.pem -in jenkins.pem -export -out jenkins.p12 -name jenkins -passout pass:$JENKINS_KEYSTORE_PWD
+              openssl pkcs12 -inkey key.pem -in jenkins.pem -export -out jenkins.p12 -name jenkins -passout pass:${JENKINS_KEYSTORE_PWD}
               set -x
               mkdir -p /etc/ssl/jenkins/
               mv jenkins.p12 /etc/ssl/jenkins/
