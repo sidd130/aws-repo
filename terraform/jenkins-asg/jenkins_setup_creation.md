@@ -167,3 +167,15 @@ Update lambda policy to give permissions to create new log group, create new log
 ---
 
 Summarize all the changes done since the last commit for formulating a commit comment and push to remote
+
+---
+
+The create log group permission for lambda should be for `arn:aws:logs:${var.aws_region}:${var.account_id}:*`
+
+---
+
+Modify the handler such that after `message` is retrieved, a check is performed if it contains the key `LifecycleTransition` before proceeding with other steps
+
+---
+
+Add a timeout of 60 secs in the lamdba handler
