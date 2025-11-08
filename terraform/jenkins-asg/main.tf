@@ -361,6 +361,7 @@ resource "aws_lambda_function" "eip_manager" {
   role         = aws_iam_role.lambda_role.arn
   handler      = "eip_manager.handler"
   runtime      = "python3.10"
+  timeout      = 60
 
   environment {
     variables = {
