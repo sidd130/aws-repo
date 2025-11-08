@@ -310,7 +310,7 @@ resource "aws_launch_template" "jenkins" {
 
               # Clean up sensitive environment variables
               echo "Cleaning up sensitive environment variables..."
-              unset JENKINS_KEYSTORE_PWD
+              # unset JENKINS_KEYSTORE_PWD
               unset JENKINS_BACKUP_BUCKET
 
               echo "Installation completed at $(date)"
