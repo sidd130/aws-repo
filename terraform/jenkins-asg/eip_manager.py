@@ -22,7 +22,7 @@ def handler(event, context):
         logger.info(f"Received message: {message}")
         
         # Check if this is a lifecycle action
-        if 'LifecycleTransition' in message:
+        if 'LifecycleTransition' in message.keys():
             logger.info("Lifecycle transition event detected")
             
             # Extract instance ID
@@ -40,19 +40,19 @@ def handler(event, context):
             )
             logger.info(f"Successfully associated EIP {eip_allocation_id} with instance {instance_id}")
         
-        # Complete the lifecycle action
-        asg_client.complete_lifecycle_action(
-            LifecycleHookName=lifecycle_hook_name,
-            AutoScalingGroupName=asg_name,
-            LifecycleActionToken=lifecycle_action_token,
-            InstanceId=instance_id,
-            LifecycleActionResult='CONTINUE'
-        )
-        logger.info(f"Successfully completed lifecycle action for instance {instance_id}")
+            # Complete the lifecycle action
+            asg_client.complete_lifecycle_action(
+                LifecycleHookName=lifecycle_hook_name,
+                AutoScalingGroupName=asg_name,
+                LifecycleActionToken=lifecycle_action_token,
+                InstanceId=instance_id,
+                LifecycleActionResult='CONTINUE'
+            )
+            logger.info(f"Successfully completed lifecycle action for instance {instance_id}")
         
         return {
             'statusCode': 200,
-            'body': json.dumps('EIP association and lifecycle completion successful')
+            'body': json.dumps('Lifecycle event processing complete')
         }
         
     except Exception as e:
