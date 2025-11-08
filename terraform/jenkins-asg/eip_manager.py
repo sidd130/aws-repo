@@ -14,24 +14,31 @@ def handler(event, context):
     ec2_client = boto3.client('ec2')
     asg_client = boto3.client('autoscaling')
     eip_allocation_id = os.environ['EIP_ALLOCATION_ID']
+    asg_name, lifecycle_hook_name, lifecycle_action_token,instance_id = None, None, None, None
     
     try:
         # Parse the SNS message from ASG
         message = json.loads(event['Records'][0]['Sns']['Message'])
-        print(message)
-        instance_id = message['EC2InstanceId']
+        logger.info(f"Received message: {message}")
         
-        # Extract lifecycle information
-        asg_name = message['AutoScalingGroupName']
-        lifecycle_hook_name = message['LifecycleHookName']
-        lifecycle_action_token = message['LifecycleActionToken']
-        
-        # Associate EIP with the new instance
-        response = ec2_client.associate_address(
-            AllocationId=eip_allocation_id,
-            InstanceId=instance_id
-        )
-        logger.info(f"Successfully associated EIP {eip_allocation_id} with instance {instance_id}")
+        # Check if this is a lifecycle action
+        if 'LifecycleTransition' in message:
+            logger.info("Lifecycle transition event detected")
+            
+            # Extract instance ID
+            instance_id = message['EC2InstanceId']
+            
+            # Extract lifecycle information
+            asg_name = message['AutoScalingGroupName']
+            lifecycle_hook_name = message['LifecycleHookName']
+            lifecycle_action_token = message['LifecycleActionToken']
+            
+            # Associate EIP with the new instance
+            response = ec2_client.associate_address(
+                AllocationId=eip_allocation_id,
+                InstanceId=instance_id
+            )
+            logger.info(f"Successfully associated EIP {eip_allocation_id} with instance {instance_id}")
         
         # Complete the lifecycle action
         asg_client.complete_lifecycle_action(
