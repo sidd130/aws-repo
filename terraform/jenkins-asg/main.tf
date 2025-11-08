@@ -265,7 +265,7 @@ resource "aws_launch_template" "jenkins" {
               JENKINS_CONFIG
 
               set +x
-              sed -i "s/JENKINS_KEYSTORE_PWD/$(aws ssm get-parameter --name "/jenkins/s3-bucket-name" --with-decryption --region ${var.aws_region} --query "Parameter.Value" --output text)/g" /etc/systemd/system/jenkins.service.d/override.conf
+              sed -i "s/JENKINS_KEYSTORE_PWD/$(aws ssm get-parameter --name "/jenkins/https-keystore-pwd" --with-decryption --region ${var.aws_region} --query "Parameter.Value" --output text)/g" /etc/systemd/system/jenkins.service.d/override.conf
               set -x
               
               # Configure firewall if it's running
@@ -284,7 +284,7 @@ resource "aws_launch_template" "jenkins" {
               echo "Configuring HTTPS for Jenkins..."
               openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out jenkins.pem -subj "/C=IN/ST=Karnataka/L=Bengaluru/O=NA/OU=NA/CN=NA" -batch
               set +x
-              openssl pkcs12 -inkey key.pem -in jenkins.pem -export -out jenkins.p12 -name jenkins -passout pass:$(aws ssm get-parameter --name "/jenkins/s3-bucket-name" --with-decryption --region ${var.aws_region} --query "Parameter.Value" --output text)
+              openssl pkcs12 -inkey key.pem -in jenkins.pem -export -out jenkins.p12 -name jenkins -passout pass:$(aws ssm get-parameter --name "/jenkins/https-keystore-pwd" --with-decryption --region ${var.aws_region} --query "Parameter.Value" --output text)
               set -x
               mkdir -p /etc/ssl/jenkins/
               mv jenkins.p12 /etc/ssl/jenkins/
