@@ -478,7 +478,7 @@ resource "aws_autoscaling_lifecycle_hook" "jenkins" {
   autoscaling_group_name = aws_autoscaling_group.jenkins.name
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
   default_result        = "CONTINUE"
-  heartbeat_timeout     = 60
+  heartbeat_timeout     = 120
   notification_target_arn = aws_sns_topic.jenkins_asg.arn
   role_arn              = aws_iam_role.asg_notification_role.arn
 }
