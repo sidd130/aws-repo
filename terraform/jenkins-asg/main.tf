@@ -1,0 +1,527 @@
+data "aws_iam_policy_document" "jenkins_kms_policy" {
+  version = "2012-10-17"
+  policy_id = "key-consolepolicy-3"
+
+  # Enable IAM User Permissions
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = ["arn:aws:iam::${var.account_id}:root"]
+    }
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+
+  # Allow access for Key Administrators
+  statement {
+    sid    = "Allow access for Key Administrators"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = ["arn:aws:iam::${var.account_id}:user/siddas"]
+    }
+    actions = [
+      "kms:Create*",
+      "kms:Describe*",
+      "kms:Enable*",
+      "kms:List*",
+      "kms:Put*",
+      "kms:Update*",
+      "kms:Revoke*",
+      "kms:Disable*",
+      "kms:Get*",
+      "kms:Delete*",
+      "kms:TagResource",
+      "kms:UntagResource",
+      "kms:ScheduleKeyDeletion",
+      "kms:CancelKeyDeletion",
+      "kms:RotateKeyOnDemand"
+    ]
+    resources = ["*"]
+  }
+
+  # Allow use of the key
+  statement {
+    sid    = "Allow use of the key"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = ["arn:aws:iam::${var.account_id}:user/siddas"]
+    }
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey"
+    ]
+    resources = ["*"]
+  }
+
+  # Allow attachment of persistent resources
+  statement {
+    sid    = "Allow attachment of persistent resources"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = ["arn:aws:iam::${var.account_id}:user/siddas"]
+    }
+    actions = [
+      "kms:CreateGrant",
+      "kms:ListGrants",
+      "kms:RevokeGrant"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "Bool"
+      variable = "kms:GrantIsForAWSResource"
+      values   = ["true"]
+    }
+  }
+
+  # Privilege for Jenkins EC2 instance profile
+  statement {
+    sid    = "Privilege for Jenkins EC2 instance profile"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = ["arn:aws:iam::${var.account_id}:role/jenkins-ec2-role"]
+    }
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey"
+    ]
+    resources = ["*"]
+  }
+}
+
+# Create IAM role for Jenkins EC2
+resource "aws_iam_role" "jenkins_role" {
+  name = "jenkins-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Create IAM policy for S3 access
+resource "aws_iam_role_policy" "jenkins_s3_policy" {
+  name = "jenkins-s3-policy"
+  role = aws_iam_role.jenkins_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject"
+        ]
+        Resource = [
+          "arn:aws:s3:::siddas-jenkins-backup-store/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Create IAM policy for SSM parameter store access and KMS decryption
+resource "aws_iam_role_policy" "jenkins_ssm_policy" {
+  name = "jenkins-ssm-policy"
+  role = aws_iam_role.jenkins_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "arn:aws:ssm:${var.aws_region}:${var.account_id}:parameter/jenkins/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = "arn:aws:kms:${var.aws_region}:${var.account_id}:alias/jenkins-sym-key"
+      }
+    ]
+  })
+}
+
+# Create instance profile
+resource "aws_iam_instance_profile" "jenkins_profile" {
+  name = "jenkins-instance-profile"
+  role = aws_iam_role.jenkins_role.name
+}
+
+data "aws_kms_key" "kms_key" {
+  key_id = "alias/jenkins-sym-key"
+}
+
+resource "aws_kms_key_policy" "kms_key_policy" {
+  key_id = data.aws_kms_key.kms_key.id
+  policy = data.aws_iam_policy_document.jenkins_kms_policy.json
+}
+
+# Create launch template
+resource "aws_launch_template" "jenkins" {
+  name_prefix   = "jenkins-template"
+  image_id      = var.ami_id
+  instance_type = var.instance_type
+
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups            = [var.security_group_id]
+    subnet_id                  = var.subnet_id
+  }
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.jenkins_profile.name
+  }
+
+  key_name = var.key_name
+
+  user_data = base64encode(<<-EOF
+              #!/bin/bash
+              exec 1> >(tee /var/log/user-data-log.txt) 2>&1
+              set -x
+
+              echo "Starting Jenkins installation and configuration at $(date)"
+
+              # Update system
+              echo "Updating system packages..."
+              yum update -y
+
+              # Install required dependencies
+              echo "Installing dependencies..."
+              yum install -y fontconfig wget unzip
+
+              # Install AWS CLI
+              echo "Installing AWS CLI..."
+              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              unzip awscliv2.zip
+              ./aws/install
+              rm -f awscliv2.zip
+              rm -rf aws/
+
+              # Fetch SSM parameters
+              echo "Fetching SSM parameters..."
+              # set +x
+              # export JENKINS_KEYSTORE_PWD=$(aws ssm get-parameter \
+              #   --name "/jenkins/https-keystore-pwd" \
+              #   --with-decryption \
+              #   --region ${var.aws_region} \
+              #   --query "Parameter.Value" \
+              #   --output text)
+              # set -x
+
+              export JENKINS_BACKUP_BUCKET=$(aws ssm get-parameter \
+                --name "/jenkins/s3-bucket-name" \
+                --with-decryption \
+                --region ${var.aws_region} \
+                --query "Parameter.Value" \
+                --output text)
+
+              # Install Java 21
+              echo "Installing Java 21..."
+              yum install -y java-21-openjdk
+
+              # Install Jenkins LTS release
+              echo "Installing Jenkins LTS..."
+              wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+              rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+              yum install -y jenkins
+
+              # Configure JVM options for Jenkins with G1 garbage collector
+              echo "Configuring JVM options for Jenkins..."
+              mkdir -p /etc/systemd/system/jenkins.service.d/
+              cat << 'JENKINS_CONFIG' > /etc/systemd/system/jenkins.service.d/override.conf
+              [Service]
+              Environment="JAVA_OPTS=-Xmx2048m -XX:+UseG1GC -XX:+ExplicitGCInvokesConcurrent -XX:+ParallelRefProcEnabled -XX:+UseStringDeduplication -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:+UnlockDiagnosticVMOptions -XX:G1HeapRegionSize=8m -XX:MetaspaceSize=512m -XX:InitiatingHeapOccupancyPercent=45"
+              Environment="JENKINS_HOME=/var/lib/jenkins"
+              Environment="JENKINS_HTTPS_PORT=8443"
+              Environment="JENKINS_HTTPS_KEYSTORE=/etc/ssl/jenkins/jenkins.p12"
+              Environment="JENKINS_HTTPS_KEYSTORE_PASSWORD=JENKINS_KEYSTORE_PWD"
+              JENKINS_CONFIG
+
+              set +x
+              sed -i "s/JENKINS_KEYSTORE_PWD/$(aws ssm get-parameter --name "/jenkins/https-keystore-pwd" --with-decryption --region ${var.aws_region} --query "Parameter.Value" --output text)/g" /etc/systemd/system/jenkins.service.d/override.conf
+              set -x
+              
+              # Configure firewall if it's running
+              echo "Configuring firewall rules..."
+              if systemctl is-active firewalld; then
+                firewall-cmd --permanent --new-service=jenkins
+                firewall-cmd --permanent --service=jenkins --set-short="Jenkins ports"
+                firewall-cmd --permanent --service=jenkins --set-description="Jenkins port exceptions"
+                firewall-cmd --permanent --service=jenkins --add-port=8080/tcp
+                firewall-cmd --permanent --add-service=jenkins
+                firewall-cmd --permanent --zone=public --add-service=http
+                firewall-cmd --reload
+              fi
+
+              # Configure HTTPS for Jenkins
+              echo "Configuring HTTPS for Jenkins..."
+              openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out jenkins.pem -subj "/C=IN/ST=Karnataka/L=Bengaluru/O=NA/OU=NA/CN=NA" -batch
+              set +x
+              openssl pkcs12 -inkey key.pem -in jenkins.pem -export -out jenkins.p12 -name jenkins -passout pass:$(aws ssm get-parameter --name "/jenkins/https-keystore-pwd" --with-decryption --region ${var.aws_region} --query "Parameter.Value" --output text)
+              set -x
+              mkdir -p /etc/ssl/jenkins/
+              mv jenkins.p12 /etc/ssl/jenkins/
+              chmod uga+rx /etc/ssl/jenkins/jenkins.p12
+              
+              # Set up Jenkins environment variable
+              echo "Setting up JENKINS_HOME environment variable..."
+              echo 'export JENKINS_HOME=/var/lib/jenkins' > /etc/profile.d/jenkins_home.sh
+              chmod +x /etc/profile.d/jenkins_home.sh
+              source /etc/profile.d/jenkins_home.sh
+              
+              # Reload systemd and start Jenkins
+              echo "Starting Jenkins service..."
+              systemctl daemon-reload
+              systemctl enable jenkins
+              systemctl start jenkins
+
+              # Install Terraform
+              echo "Installing Terraform..."
+              yum install -y yum-utils
+              yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+              yum -y install terraform
+
+              # Clean up sensitive environment variables
+              echo "Cleaning up sensitive environment variables..."
+              # unset JENKINS_KEYSTORE_PWD
+              unset JENKINS_BACKUP_BUCKET
+
+              echo "Installation completed at $(date)"
+              set +x
+              EOF
+  )
+
+  tags = {
+    Name = "jenkins-server"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Create Auto Scaling Group
+resource "aws_autoscaling_group" "jenkins" {
+  name                = "jenkins-asg"
+  desired_capacity    = var.asg_desired_capacity
+  max_size            = var.asg_max_size
+  min_size            = var.asg_min_size
+  vpc_zone_identifier = [var.subnet_id]
+
+  launch_template {
+    id      = aws_launch_template.jenkins.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value              = "jenkins-server"
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  depends_on = [data.aws_kms_key.kms_key, resource.aws_kms_key_policy.kms_key_policy]
+}
+
+# Data source for existing EIP
+data "aws_eip" "jenkins" {
+  id = var.eip_id
+}
+
+# Lambda function to manage EIP association
+resource "aws_lambda_function" "eip_manager" {
+  filename      = "${path.module}/eip_manager.zip"
+  function_name = "jenkins-eip-manager"
+  role         = aws_iam_role.lambda_role.arn
+  handler      = "eip_manager.handler"
+  runtime      = "python3.10"
+  timeout      = 60
+
+  environment {
+    variables = {
+      EIP_ALLOCATION_ID = data.aws_eip.jenkins.id
+    }
+  }
+}
+
+# Lambda IAM role
+resource "aws_iam_role" "lambda_role" {
+  name = "jenkins-eip-manager-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Lambda IAM policy
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "jenkins-eip-manager-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeInstances",
+          "ec2:AssociateAddress",
+          "ec2:DisassociateAddress"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "autoscaling:CompleteLifecycleAction"
+        ]
+        Resource = "arn:aws:autoscaling:${var.aws_region}:${var.account_id}:autoScalingGroup:*:autoScalingGroupName/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:${var.account_id}:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:${var.account_id}:log-group:/aws/lambda/${aws_lambda_function.eip_manager.function_name}:*"
+      }
+    ]
+  })
+}
+
+# Create SNS Topic
+resource "aws_sns_topic" "jenkins_asg" {
+  name = "jenkins-asg-lifecycle"
+}
+
+# SNS Topic Policy
+resource "aws_sns_topic_policy" "jenkins_asg" {
+  arn = aws_sns_topic.jenkins_asg.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowASGPublish"
+        Effect = "Allow"
+        Principal = {
+          Service = "autoscaling.amazonaws.com"
+        }
+        Action   = "sns:Publish"
+        Resource = aws_sns_topic.jenkins_asg.arn
+      }
+    ]
+  })
+}
+
+# Lambda permission to allow SNS to invoke function
+resource "aws_lambda_permission" "with_sns" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.eip_manager.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.jenkins_asg.arn
+}
+
+# SNS Topic Subscription
+resource "aws_sns_topic_subscription" "lambda" {
+  topic_arn = aws_sns_topic.jenkins_asg.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.eip_manager.arn
+}
+
+# ASG lifecycle hook
+resource "aws_autoscaling_lifecycle_hook" "jenkins" {
+  name                   = "jenkins-lifecycle-hook"
+  autoscaling_group_name = aws_autoscaling_group.jenkins.name
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
+  default_result        = "CONTINUE"
+  heartbeat_timeout     = 120
+  notification_target_arn = aws_sns_topic.jenkins_asg.arn
+  role_arn              = aws_iam_role.asg_notification_role.arn
+}
+
+# ASG notification role
+resource "aws_iam_role" "asg_notification_role" {
+  name = "jenkins-asg-notification-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "autoscaling.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# ASG notification role policy
+resource "aws_iam_role_policy" "asg_notification_policy" {
+  name = "jenkins-asg-notification-policy"
+  role = aws_iam_role.asg_notification_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = [
+          aws_sns_topic.jenkins_asg.arn
+        ]
+      }
+    ]
+  })
+}
